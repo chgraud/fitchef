@@ -88,10 +88,19 @@ with st.sidebar:
         if st.button("🥤 +0.25L"): st.session_state.agua_bebida += 0.25; st.rerun()
     st.divider()
 
-    # 1. NAVEGACIÓN ACTUALIZADA
+# --- 4. NAVEGACIÓN INTERACTIVA ACTUALIZADA ---
+if 'menu_val' not in st.session_state:
+    st.session_state.menu_val = "🏠 Inicio"
+
+def cambiar_pestana(nombre):
+    st.session_state.menu_val = nombre
+    st.rerun()
+
+opciones_menu = ["🏠 Inicio", "🥗 Nutrición Pro", "🏋️‍♂️ Entrenador IA", "🍷 Vida Social", "🩸 Progreso", "👤 Perfil"]
 menu = st.radio(
     "Navegación:", 
-    ["🏠 Inicio", "🥗 Nutrición Pro", "🏋️‍♂️ Entrenador IA", "🍷 Vida Social", "🩸 Progreso", "👤 Perfil"],
+    opciones_menu, 
+    index=opciones_menu.index(st.session_state.menu_val),
     horizontal=True
 )
 
@@ -102,12 +111,10 @@ st.divider()
 # ==========================================
 if menu == "🏠 Inicio":
     st.title("🚀 FitChef AI")
-    st.subheader(f"Bienvenida a tu mejor versión, {st.session_state.perfil.get('sexo', 'Guerrera')}")
+    st.subheader(f"Bienvenida a tu mejor versión, {st.session_state.perfil.get('objetivo', 'Guerrera').split()[-1]}")
     
-    # Imagen de portada impactante
     st.image("https://images.unsplash.com/photo-1594882645126-14020914d58d?q=80&w=2085&auto=format&fit=crop", use_container_width=True)
 
-    # Dashboard de Bienvenida
     c1, c2, c3 = st.columns(3)
     with c1: st.metric("🥗 Racha Dieta", f"{st.session_state.racha_nutricion} d")
     with c2: st.metric("💪 Racha Entreno", f"{st.session_state.racha_entreno} d")
@@ -115,34 +122,84 @@ if menu == "🏠 Inicio":
 
     st.markdown("""
     ### 🌟 ¿Qué hacemos hoy?
-    Selecciona una opción en el menú superior para empezar:
-    * **Nutrición:** Escanea tu comida y genera tu plan semanal.
-    * **Entrenamiento:** Tu rutina inteligente con vídeos técnicos.
-    * **Vida Social:** Sobrevive a las cenas fuera y activa el SOS Resaca.
-    * **Perfil:** Ajusta tus datos biométricos y objetivos.
+    Selecciona una opción en el menú superior o usa estos accesos rápidos:
     """)
+    
+    # Botones que funcionan y te llevan a las pestañas
+    c_btn1, c_btn2 = st.columns(2)
+    with c_btn1:
+        if st.button("🥗 IR A NUTRICIÓN", use_container_width=True): cambiar_pestana("🥗 Nutrición Pro")
+        if st.button("🍷 VIDA SOCIAL", use_container_width=True): cambiar_pestana("🍷 Vida Social")
+    with c_btn2:
+        if st.button("🏋️‍♂️ IR A ENTRENAMIENTO", use_container_width=True): cambiar_pestana("🏋️‍♂️ Entrenador IA")
+        if st.button("👤 CONFIGURAR PERFIL", use_container_width=True, type="primary"): cambiar_pestana("👤 Perfil")
+
     st.info("💡 **Tip de hoy:** Beber un vaso de agua antes de cada comida mejora tu digestión y saciedad.")
 
 # ==========================================
-# 👤 PANTALLA: PERFIL (EL CÓDIGO QUE ME HAS PASADO)
+# 👤 PANTALLA: PERFIL GOD-TIER (COMPLETO)
 # ==========================================
 elif menu == "👤 Perfil":
     with st.form("perfil_completo"):
         st.subheader("👤 Perfil God-Tier")
-        # --- AQUÍ VA TODO EL CÓDIGO QUE ME HAS PASADO ---
-        # (Expander 1, 2, 3, 4, 5 y el botón de guardar)
+        
         with st.expander("1. Biometría y Salud Femenina"):
             sexo = st.selectbox("Sexo", ["Hombre", "Mujer"], index=0 if st.session_state.perfil.get('sexo') == 'Hombre' else 1)
             perfil_hormonal = "Ninguno"
             if sexo == "Mujer":
                 perfil_hormonal = st.selectbox("Fase Hormonal", ["Ninguno", "Fase Folicular (Post-regla)", "Fase Lútea (Pre-regla)", "SOP", "Endometriosis", "Embarazo", "Postparto", "Menopausia", "⚠️ RED-S (Falta de regla)"], index=0)
-            edad = st.number_input("Edad", 14, 90, st.session_state.perfil['edad'])
-            # ... (Resto de tus expanders igual que me los has pasado)
             
-        if st.form_submit_button("💾 Actualizar y Guardar"):
-            # ... (Toda tu lógica de st.session_state.perfil.update)
-            st.success("¡Perfil actualizado!")
+            col_bio1, col_bio2, col_bio3 = st.columns(3)
+            with col_bio1: edad = st.number_input("Edad", 14, 90, st.session_state.perfil['edad'])
+            with col_bio2: altura = st.number_input("Altura (cm)", 100, 250, st.session_state.perfil['altura'])
+            with col_bio3: peso = st.number_input("Peso (kg)", 30.0, 200.0, st.session_state.perfil['peso'])
+            
+            actividad = st.selectbox("NEAT Diario", ["Sedentaria", "Ligera", "Moderada", "Muy Activa"], index=2)
 
+        with st.expander("2. Objetivos y Logística de Entreno"):
+            obj = st.selectbox("Programa (Objetivo)", [
+                "Estética Funcional", "Powerbuilding (Fuerza + Volumen)", 
+                "Shredding (Definición Extrema)", "Recomposición Femenina (Focus Glúteo)", 
+                "Atleta Híbrido", "Longevidad y Salud Articular"
+            ], index=0)
+            experiencia = st.selectbox("Nivel", ["Principiante (<1 año)", "Intermedio (1-3 años)", "Avanzado (+3 años)"], index=1)
+            col_ent1, col_ent2 = st.columns(2)
+            with col_ent1: lugar_entreno = st.selectbox("Lugar", ["Gimnasio Comercial", "Home Gym (Mancuernas)", "Calistenia (Parque/Peso corporal)"])
+            with col_ent2: horario_entreno = st.selectbox("Horario habitual", ["Mañana (Ayunas)", "Mañana (Tras desayunar)", "Tarde", "Noche"])
+            dias_gym = st.slider("Días de entreno", 1, 6, st.session_state.perfil['dias_entreno'])
+
+        with st.expander("3. Nutrición y Presupuesto"):
+            presupuesto = st.select_slider("Presupuesto", options=["Económico", "Moderado", "Premium"], value=st.session_state.perfil.get('presupuesto', 'Moderado'))
+            dieta_tipo = st.selectbox("Tipo de Dieta", ["Omnívora", "Vegetariana", "Vegana", "Keto", "Pescetariana"])
+            col_nut1, col_nut2 = st.columns(2)
+            with col_nut1: n_comidas = st.number_input("Comidas/día", 1, 8, st.session_state.perfil['n_comidas'])
+            with col_nut2: ayuno = st.toggle("¿Haces Ayuno Intermitente?", value=st.session_state.perfil['ayuno'])
+            alergias = st.text_input("Alergias", value=st.session_state.perfil['alergias'])
+            suplementos = st.text_input("Suplementos", value=st.session_state.perfil['suplementos'])
+
+        with st.expander("4. Clínica y Recuperación"):
+            lesiones = st.text_area("Lesiones/Patologías", value=st.session_state.perfil['lesiones'])
+            col_clin1, col_clin2 = st.columns(2)
+            with col_clin1: sueno = st.selectbox("Sueño", ["Poco (<6h)", "Normal (6-8h)", "Óptimo (>8h)"], index=1)
+            with col_clin2: estres = st.selectbox("Estrés", ["Bajo", "Moderado", "Alto"], index=1)
+            
+        with st.expander("5. 🧠 Memoria Gastronómica IA"):
+            gustos_pos_str = st.text_area("AMAS (Ingredientes/Platos):", value=", ".join(st.session_state.gustos_positivos))
+            gustos_neg_str = st.text_area("ODIAS (Lo que no quieres ver):", value=", ".join(st.session_state.gustos_negativos))
+        
+        if st.form_submit_button("💾 Actualizar y Guardar"):
+            st.session_state.perfil.update({
+                'sexo': sexo, 'perfil_hormonal': perfil_hormonal, 'presupuesto': presupuesto,
+                'edad': edad, 'peso': peso, 'altura': altura, 'actividad': actividad, 'objetivo': obj, 
+                'experiencia': experiencia, 'lugar_entreno': lugar_entreno, 'horario_entreno': horario_entreno,
+                'dias_entreno': dias_gym, 'dieta_tipo': dieta_tipo, 'alergias': alergias, 
+                'n_comidas': n_comidas, 'ayuno': ayuno, 'suplementos': suplementos, 'lesiones': lesiones, 
+                'sueno': sueno, 'estres': estres
+            })
+            st.session_state.gustos_positivos = [g.strip() for g in gustos_pos_str.split(",") if g.strip()]
+            st.session_state.gustos_negativos = [g.strip() for g in gustos_neg_str.split(",") if g.strip()]
+            st.success("¡Perfil actualizado! Tus variables se han guardado.")
+            st.rerun()
 
 # ==========================================
 # PANTALLA: NUTRICIÓN PRO
