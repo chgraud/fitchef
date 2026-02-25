@@ -265,14 +265,36 @@ elif menu == "🍷 Vida Social":
                 st.session_state.gustos_positivos.append(nuevo_fav)
                 st.success("Guardado.")
 
-    with t_resaca:
-        st.subheader("🎉 Protocolo Resaca")
-        if st.button("🚑 SOS Resaca", type="primary"):
-            st.session_state.meta_agua = 4.0
-            st.session_state.racha_nutricion = 0
-            st.error("Meta agua: 4L. Racha reseteada.")
-            res = client.models.generate_content(model='gemini-2.5-flash', contents="Protocolo nutrición y entreno post-alcohol.")
-            st.markdown(res.text)
+   with t_resaca:
+        st.subheader("🤕 Protocolo de Recuperación: Noche Loca")
+        st.write("Dime la verdad para que la IA pueda salvarte el día.")
+        
+        c_res1, c_res2 = st.columns(2)
+        with c_res1:
+            intensidad = st.select_slider("🔥 Intensidad de la noche", options=range(1, 11), value=5)
+            comida_basura = st.toggle("🍔 ¿Hubo comida basura / ultraprocesados?")
+        with c_res2:
+            estado_hoy = st.selectbox("💀 Estado actual", ["Supervivencia (Muerte)", "Zombie (Funcional)", "Resacoso pero Guerrero"])
+            hidratacion_ayer = st.slider("💧 ¿Bebiste agua entre copas? (1-10)", 1, 10, 3)
+
+        if st.button("🚑 ACTIVAR PROTOCOLO S.O.S", type="primary", use_container_width=True):
+            with st.spinner("Calculando daños en tu sistema..."):
+                # Lógica de penalización y ajuste
+                st.session_state.racha_nutricion = 0
+                st.session_state.meta_agua = 4.0 if intensidad > 5 else 3.5
+                
+                # Prompt específico para recuperación
+                p_resaca = f"""
+                Protocolo para {st.session_state.perfil['objetivo']}. 
+                Noche nivel {intensidad}/10. Comida basura: {comida_basura}. Estado: {estado_hoy}.
+                Genera: 1. Bebida electrolítica casera. 2. Ajuste de entreno (¿Descarga?). 3. Comida clave para detox hepático.
+                """
+                res_resaca = client.models.generate_content(model='gemini-2.5-flash', contents=p_resaca)
+                
+                st.error(f"🚨 **PROTOCOLO ACTIVADO:** Tu racha se ha reseteado. Meta agua hoy: {st.session_state.meta_agua}L.")
+                st.markdown(res_resaca.text)
+                if intensidad > 8 or estado_hoy == "Supervivencia (Muerte)":
+                    st.warning("⚠️ **ALERTA ENTRENAMIENTO:** Hoy la IA recomienda descanso total o movilidad muy suave. No fuerces el corazón.")
 # ==========================================
 # PANTALLA: ENTRENADOR IA (JSON INTERACTIVO)
 # ==========================================
