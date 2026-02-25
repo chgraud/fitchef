@@ -149,14 +149,19 @@ if menu == "🥗 Nutrición Pro":
     with st.expander("🛒 Mi Despensa y Escáner", expanded=not bool(st.session_state.plan_estructurado)):
         t_nev, t_lis, t_bar, t_voz, t_man = st.tabs(["📸 Nevera", "📝 Lista", "🔢 Barras", "🎤 Voz", "⌨️ Manual"])
         with t_nev:
-            col_cam, col_up = st.columns(2)
-            with col_cam: foto_cam = st.camera_input("Foto", key="cam_nev")
-            with col_up: foto_up = st.file_uploader("Galería", type=['jpg', 'png'])
-            if (foto_cam or foto_up) and IA_ACTIVA:
-                res = client.models.generate_content(model='gemini-2.5-flash', contents=["Ingredientes en español, separados por comas.", Image.open(foto_cam or foto_up)])
-                st.session_state.despensa.extend([i.strip().lower() for i in res.text.split(",") if i.strip()])
-                st.session_state.despensa = list(set(st.session_state.despensa))
-                st.success("¡Detectados!")
+            st.write("📸 **Escáner de Nevera**")
+            usar_cam_nev = st.toggle("Usar cámara en vivo", key="tg_nev")
+            if usar_cam_nev:
+                foto_final = st.camera_input("Enfoca tus ingredientes", key="cam_nev")
+            else:
+                foto_final = st.file_uploader("📷 Haz una foto o sube imagen", type=['jpg', 'png'], key="up_nev")
+            
+            if foto_final and IA_ACTIVA:
+                with st.spinner("Detectando..."):
+                    res = client.models.generate_content(model='gemini-2.5-flash', contents=["Ingredientes en español, separados por comas.", Image.open(foto_final)])
+                    st.session_state.despensa.extend([i.strip().lower() for i in res.text.split(",") if i.strip()])
+                    st.session_state.despensa = list(set(st.session_state.despensa))
+                    st.success("¡Ingredientes añadidos!")
         with t_man:
             manual = st.text_input("Añadir a mano (ej: pollo, arroz)")
             if st.button("Añadir"): 
@@ -246,25 +251,34 @@ elif menu == "🍷 Vida Social":
     t_carta, t_plato, t_resaca = st.tabs(["📜 Carta", "📸 Plato Libre", "🤕 Noche Loca"])
     
     with t_carta:
-        f_c = st.camera_input("Foto menú", key="c_v_s")
-        if f_c:
-            res = client.models.generate_content(model='gemini-2.5-flash', contents=["Recomienda platos sanos.", Image.open(f_c)])
-            st.markdown(res.text)
+        st.write("📜 **Escáner de Menús**")
+        usar_cam_carta = st.toggle("Usar cámara en vivo", key="tg_carta")
+        if usar_cam_carta:
+            f_carta = st.camera_input("Enfoca la carta", key="cam_carta_live")
+        else:
+            f_carta = st.file_uploader("📷 Haz foto a la carta o sube imagen", type=['jpg', 'png'], key="up_carta")
+            
+        if f_carta and IA_ACTIVA:
+            with st.spinner("Analizando carta..."):
+                res = client.models.generate_content(model='gemini-2.5-flash', contents=["Recomienda 2 platos sanos del menú.", Image.open(f_carta)])
+                st.markdown(res.text)
 
     with t_plato:
-        st.subheader("📸 Analizador de Plato")
-        c1, c2 = st.columns(2)
-        with c1: f_p1 = st.camera_input("Foto", key="p_v_s")
-        with c2: f_p2 = st.file_uploader("Galería", type=['jpg','png','jpeg'], key="g_v_s")
-        foto = f_p1 or f_p2
-        if foto:
-            res = client.models.generate_content(model='gemini-2.5-flash', contents=["Analiza macros.", Image.open(foto)])
-            st.markdown(res.text)
-            nuevo_fav = st.text_input("❤️ Guardar favorito:")
-            if st.button("Guardar") and nuevo_fav:
-                st.session_state.gustos_positivos.append(nuevo_fav)
-                st.success("Guardado.")
-   
+        st.subheader("📸 Analizador de Plato Libre")
+        usar_cam_plato = st.toggle("Usar cámara en vivo", key="tg_plato")
+        if usar_cam_plato:
+            foto_p = st.camera_input("Enfoca tu plato", key="cam_plato_live")
+        else:
+            foto_p = st.file_uploader("📷 Haz foto al plato o sube imagen", type=['jpg', 'png', 'jpeg'], key="up_plato")
+            
+        if foto_p and IA_ACTIVA:
+            with st.spinner("Calculando..."):
+                res = client.models.generate_content(model='gemini-2.5-flash', contents=["Analiza macros y calorías.", Image.open(foto_p)])
+                st.markdown(res.text)
+                nuevo_fav = st.text_input("❤️ ¿Guardar en favoritos?", key="fav_plato")
+                if st.button("Guardar Plato") and nuevo_fav:
+                    st.session_state.gustos_positivos.append(nuevo_fav)
+                    st.success("Guardado en tu memoria.")
     with t_resaca:
         st.subheader("🤕 Protocolo de Recuperación: Noche Loca")
         st.write("Dime la verdad para que la IA pueda salvarte el día.")
