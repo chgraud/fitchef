@@ -264,8 +264,8 @@ elif menu == "🍷 Vida Social":
             if st.button("Guardar") and nuevo_fav:
                 st.session_state.gustos_positivos.append(nuevo_fav)
                 st.success("Guardado.")
-
-   with t_resaca:
+   
+    with t_resaca:
         st.subheader("🤕 Protocolo de Recuperación: Noche Loca")
         st.write("Dime la verdad para que la IA pueda salvarte el día.")
         
