@@ -165,6 +165,54 @@ with st.sidebar:
     st.session_state.modo_bestia = st.toggle("🔥 Modo Bestia", value=st.session_state.modo_bestia, help="Actívalo los días que te sientas con energía infinita. La IA subirá la intensidad.")
 
 # ==========================================
+    # 💾 SISTEMA DE GUARDADO Y CARGA (BÓVEDA)
+    # ==========================================
+    st.sidebar.divider()
+    st.sidebar.subheader("💾 Tu Bóveda Biológica")
+    
+    # 1. PREPARAR LOS DATOS PARA DESCARGAR
+    # Recopilamos solo lo importante (evitamos basura temporal de la sesión)
+    datos_exportar = {
+        "perfil": st.session_state.perfil,
+        "despensa": st.session_state.despensa,
+        "mapa_muscular": st.session_state.mapa_muscular,
+        "historial_medico": st.session_state.get('historial_medico', {"analiticas": "Sin datos.", "lesiones": "Sin lesiones."}),
+        "maximos_rm": st.session_state.get('maximos_rm', {}),
+        "racha_entreno": st.session_state.racha_entreno
+    }
+    
+    # Convertimos el diccionario a un texto JSON formateado
+    json_guardado = json.dumps(datos_exportar, indent=4)
+    
+    # Botón de Descarga
+    st.sidebar.download_button(
+        label="⬇️ Descargar mi Perfil Biológico",
+        data=json_guardado,
+        file_name="mi_human_os_backup.json",
+        mime="application/json",
+        use_container_width=True
+    )
+    
+    st.sidebar.write("---")
+    
+    # 2. CARGAR UNA COPIA DE SEGURIDAD ANTERIOR
+    archivo_carga = st.sidebar.file_uploader("📂 Restaurar Copia de Seguridad", type=["json"], key="carga_boveda")
+    
+    if archivo_carga is not None:
+        try:
+            datos_cargados = json.load(archivo_carga)
+            
+            # Inyectamos los datos cargados directamente en las venas de la app
+            for clave, valor in datos_cargados.items():
+                st.session_state[clave] = valor
+                
+            st.sidebar.success("¡Perfil Restaurado con Éxito!")
+            time.sleep(1)
+            st.rerun() # Recargamos la app para que aplique los cambios visualmente
+        except Exception as e:
+            st.sidebar.error("Error al leer el archivo. ¿Es un backup válido?")
+
+# ==========================================
 # 6. NAVEGACIÓN PRINCIPAL
 # ==========================================
 opciones_menu = ["🏠 Inicio", "👤 Perfil", "🏥 Clínica Bio-Hacking", "🥗 Nutrición Pro", "🏋️‍♂️ Entrenador IA", "🍷 Vida Social", "🩸 Progreso"]
@@ -357,6 +405,47 @@ elif menu == "👤 Perfil":
         st.success("¡Perfil guardado!")
         st.rerun()
 
+    # --- 📅 PERIODIZACIÓN Y BIO-RELOJ HORMONAL ---
+    with st.expander("📅 Periodización y Bio-Reloj (Mesociclo de 4 Semanas)", expanded=True):
+        st.write("¿En qué punto de tu ciclo/programa estás? La IA ajustará la intensidad y los macros.")
+        
+        es_mujer = st.session_state.perfil.get('sexo', 'Hombre') == 'Mujer'
+        
+        if es_mujer:
+            st.info("🧬 **Modo Bio-Reloj Femenino Activado:** El mesociclo se sincroniza con tus fases hormonales (aprox. 28 días).")
+            # El slider ahora representa las semanas del ciclo
+            semana_actual = st.slider("Semana de tu Ciclo (1 a 4)", 1, 4, st.session_state.perfil.get('semana_mesociclo', 1))
+            st.session_state.perfil['semana_mesociclo'] = semana_actual
+            
+            # Mapeo automático de la fase hormonal según la semana
+            if semana_actual == 1:
+                st.session_state.perfil['perfil_hormonal'] = "Fase Menstrual"
+                st.error("🩸 **Semana 1 (Menstrual):** Estrógeno y Progesterona bajos. Descarga del SNC. Entrenos suaves, RIR 3-4. Más hierro y grasas antiinflamatorias en dieta.")
+            elif semana_actual == 2:
+                st.session_state.perfil['perfil_hormonal'] = "Fase Folicular"
+                st.success("🟢 **Semana 2 (Folicular):** Estrógeno subiendo. Pico de fuerza y tolerancia a carbohidratos. ¡Momento de buscar RMs y subir volumen! RIR 0-1.")
+            elif semana_actual == 3:
+                st.session_state.perfil['perfil_hormonal'] = "Fase Ovulatoria"
+                st.warning("🟡 **Semana 3 (Ovulatoria):** Pico de Testosterona y Estrógeno. Cuidado con tendones/ligamentos (laxitud). Entrenos pesados pero muy controlados. RIR 1.")
+            elif semana_actual == 4:
+                st.session_state.perfil['perfil_hormonal'] = "Fase Lútea"
+                st.warning("🟠 **Semana 4 (Lútea):** Progesterona alta. Metabolismo basal acelerado (+100-300 kcal). Peor sensibilidad a la insulina. Bajamos hidratos, subimos grasas y bajamos intensidad (RIR 2-3).")
+                
+        else:
+            # Comportamiento normal para hombres (Sobrecarga progresiva estándar)
+            st.session_state.perfil['perfil_hormonal'] = "Ninguno"
+            semana_actual = st.slider("Semana del Mesociclo (1 a 4)", 1, 4, st.session_state.perfil.get('semana_mesociclo', 1))
+            st.session_state.perfil['semana_mesociclo'] = semana_actual
+            
+            if semana_actual == 1: 
+                st.info("🟢 Semana 1: Adaptación (Volumen Mínimo Efectivo). Cargas moderadas para empezar.")
+            elif semana_actual == 2: 
+                st.success("🟡 Semana 2: Sobrecarga Progresiva. Subimos kilos y nos acercamos al fallo.")
+            elif semana_actual == 3: 
+                st.warning("🟠 Semana 3: Pico de Intensidad. RIR muy bajo, rozando tu MRV.")
+            elif semana_actual == 4: 
+                st.error("🔴 Semana 4: DESCARGA (Deload). Bajamos series y pesos a la mitad para disipar la fatiga del SNC.")    
+
 # ==========================================
 # 🏥 PANTALLA: CLÍNICA BIO-HACKING
 # ==========================================
@@ -457,7 +546,6 @@ elif menu == "🥗 Nutrición Pro":
                     st.rerun()
         st.divider()
 
-    # --- 2. GESTIÓN DE DESPENSA (LOS 5 ESCÁNERES) ---
     # --- 2. GESTIÓN DE DESPENSA (LOS 5 ESCÁNERES MULTIMODALES) ---
     with st.expander("🛒 Gestionar mi Despensa e Ingredientes", expanded=not bool(st.session_state.despensa)):
         t_nev, t_ticket, t_barras, t_voz, t_man = st.tabs([
@@ -543,15 +631,20 @@ elif menu == "🥗 Nutrición Pro":
             with st.spinner("El Chef está cuadrando tus macros y diseñando la semana..."):
                 p = st.session_state.perfil
                 prompt = f"""
-                Eres un Chef Michelin y Nutricionista Deportivo. Genera una dieta semanal de Lunes a Domingo.
+                Eres un Chef Michelin y Nutricionista Clínico. Genera una dieta semanal de Lunes a Domingo.
+                
+                🩺 [HISTORIAL MÉDICO Y ANALÍTICAS]: {st.session_state.historial_medico.get('analiticas', 'Sin datos')}
                 
                 REGLAS: 
                 1. Grasas min 1g/kg. Post-entreno ({p.get('horario_entreno', 'Tarde')}) alto en CH. 
                 2. Fase Hormonal: {p.get('perfil_hormonal', 'Ninguno')}. 
                 3. Usa esta despensa si es posible: {st.session_state.despensa}.
+                4. OBLIGATORIO: Adapta los ingredientes y macros para corregir los problemas del [HISTORIAL MÉDICO] (ej: si falta hierro pon alimentos ricos en él + Vitamina C, si el azúcar es alto baja el índice glucémico).
+                🩺 [FASE DEL MESOCICLO]: Semana {p.get('semana_mesociclo', 1)} de 4. 
+                - Si es Semana 4 (Descarga/Deload): Aumenta ligeramente los carbohidratos (Refeed/Diet Break) para dar un respiro a la adaptación metabólica.
                 
                 DEVUELVE ÚNICA Y EXCLUSIVAMENTE UN JSON VÁLIDO. NI UNA SOLA PALABRA MÁS. SIN SALUDOS.
-                Estructura EXACTA obligatoria (respeta los nombres de las variables):
+                Estructura EXACTA obligatoria:
                 {{
                   "Lunes": [
                     {{
@@ -559,7 +652,7 @@ elif menu == "🥗 Nutrición Pro":
                       "plato": "Nombre del plato",
                       "ingredientes": ["ingrediente 1", "ingrediente 2"],
                       "instrucciones": "Paso a paso breve",
-                      "nota_ciencia": "Bio-hack de este plato",
+                      "nota_ciencia": "Bio-hack de este plato y cómo ayuda a tu Historial Médico",
                       "kcal": 400,
                       "prot": 30,
                       "cho": 40,
@@ -713,10 +806,13 @@ elif menu == "🏋️‍♂️ Entrenador IA":
                     
                     prompt_entreno = f"""
                     Diseña un Microciclo de {p.get('dias_entreno', 4)} días para {p['objetivo']}. 
-                    Material: {p['lugar_entreno']}. Lesiones: {p['lesiones']}.
+                    Material: {p['lugar_entreno']}. 
+                    
+                    🚨 [INFORME DE LESIONES Y FISIOTERAPIA]: {st.session_state.historial_medico.get('lesiones', 'Sin lesiones')}
+                    
                     Devuelve un JSON estricto:
                     {{
-                      "diagnostico_semanal": "Estrategia...",
+                      "diagnostico_semanal": "Estrategia adaptada a tus lesiones...",
                       "dias": {{
                         "Día 1": [
                           {{
@@ -734,8 +830,13 @@ elif menu == "🏋️‍♂️ Entrenador IA":
                       }}
                     }}
                     REGLAS VITALES:
-                    1. El "video" debe ser una URL válida y directa de Youtube.
-                    2. Incluye SIEMPRE la clave "calentamiento" para prescribir las series de aproximación lógicas antes de las series efectivas.
+                    1. ADAPTA EL ENTRENO AL INFORME MÉDICO: Prohíbe totalmente ejercicios incompatibles con las lesiones y añade ejercicios específicos de rehabilitación o seguros.
+                    2. El "video" debe ser una URL válida y directa de Youtube.
+                    3. Incluye SIEMPRE la clave "calentamiento" para prescribir las series de aproximación.
+                    🚨 [FASE DEL MESOCICLO]: Semana {p.get('semana_mesociclo', 1)} de 4. 
+                    - Si es Semana 1: RIR 2-3, volumen moderado.
+                    - Si es Semana 2 o 3: RIR 0-1 (Fallo), alta intensidad.
+                    - Si es Semana 4 (DESCARGA): OBLIGATORIO bajar las series a la mitad y subir el RIR a 3-4 para recuperar el Sistema Nervioso.
                     """
                     try:
                         res = client.models.generate_content(model=MODELO_IA, contents=prompt_entreno)
