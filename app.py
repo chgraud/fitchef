@@ -331,33 +331,6 @@ elif menu == "👤 Perfil":
         
         # --- BOTÓN DE GUARDADO MAESTRO ---
         if st.form_submit_button("💾 BLINDAR PERFIL Y CALIBRAR IA", type="primary"):
-            st.session_state.perfil.update({
-                'sexo': sexo, 'perfil_hormonal': perfil_hormonal, 'edad': edad, 'peso': peso, 'altura': altura, 
-                'actividad': actividad, 'objetivo': obj, 'experiencia': experiencia, 'lugar_entreno': lugar_entreno, 
-                'horario_entreno': horario_entreno, 'dias_entreno': dias_gym, 'dieta_tipo': dieta_tipo, 
-                'n_comidas': n_comidas, 'ayuno': ayuno, 'alergias': alergias, 
-                'suplementos': suplementos, # ¡Añadido al guardado!
-                'presupuesto': presupuesto, 'utensilios': utensilios, 'tiempo_cocina': tiempo_cocina, 'lesiones': lesiones,
-                'hora_despertar': hora_despertar.strftime("%H:%M"),
-                'hora_dormir': hora_dormir.strftime("%H:%M"),
-                'sensibilidad_digestiva': digestion,
-                'tolerancia_cafeina': cafeina
-            })
-            st.session_state.gustos_positivos = [g.strip() for g in g_pos.split(",") if g.strip()]
-            st.session_state.gustos_negativos = [g.strip() for g in g_neg.split(",") if g.strip()]
-            
-            st.success("¡Perfil God-Tier guardado! La IA ha asimilado tus ritmos circadianos, herramientas y biometría.")
-            time.sleep(1)
-            st.rerun()
-
-        # --- 5. MEMORIA GASTRONÓMICA ---
-        with st.expander("5. 🧠 Memoria Gastronómica IA"):
-            st.info("💡 **Tip:** Asegúrate de incluir fuentes de grasas insaturadas (aguacate, AOVE, nueces) en tus gustos para optimizar tu sistema hormonal.")
-            g_pos = st.text_area("AMAS (Ingredientes/Platos que te encantan):", value=", ".join(st.session_state.gustos_positivos))
-            g_neg = st.text_area("ODIAS (Lo que no quieres ver ni en pintura):", value=", ".join(st.session_state.gustos_negativos))
-        
-        # --- BOTÓN DE GUARDADO MAESTRO ---
-        if st.form_submit_button("💾 BLINDAR PERFIL Y CALIBRAR IA", type="primary"):
             # Actualizamos el diccionario con TODOS los datos nuevos
             st.session_state.perfil.update({
                 'sexo': sexo, 'perfil_hormonal': perfil_hormonal, 'edad': edad, 'peso': peso, 'altura': altura, 
@@ -734,4 +707,4 @@ elif menu == "🩸 Progreso":
                         contents=[f"Evalúa esta foto de progreso fitness de una persona que busca {st.session_state.perfil['objetivo']}. Comenta amablemente sobre su desarrollo muscular visible y su postura.", Image.open(f_espejo)]
                     )
                     st.success("Evaluación de tu Coach:")
-                    st.write(res_espejo.text)                        
+                    st.write(res_espejo.text)                                     
