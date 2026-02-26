@@ -13,16 +13,21 @@ from PIL import Image
 # ==========================================
 load_dotenv()
 st.set_page_config(page_title="FitChef AI Pro | Nivel God-Tier", layout="wide", page_icon="🚀")
-
-# CSS Avanzado para estética Premium (Botones, Tarjetas y Métricas)
+# --- PARCHE DE VISIBILIDAD (Añadir al principio del script) ---
 st.markdown("""
     <style>
-    .stButton>button { border-radius: 12px; font-weight: bold; transition: 0.3s; height: 3em; }
-    .stButton>button:hover { transform: scale(1.02); }
-    .stMetric { background: #f8f9fa; padding: 15px; border-radius: 15px; border: 1px solid #e0e0e0; box-shadow: 2px 2px 10px rgba(0,0,0,0.05); }
-    .stExpander { border-radius: 12px !important; border: 1px solid #f0f2f6; }
+    [data-testid="stMetricValue"] { font-size: 24px; color: #00FFA3 !important; }
+    [data-testid="stMetricLabel"] { color: #ffffff !important; }
+    [data-testid="stExpander"] { border: 1px solid #333; background: #0e1117; }
+    /* Fix para tarjetas blancas en modo oscuro */
+    div[data-testid="stMetric"] {
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid #333;
+    }
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # ==========================================
 # 2. CONEXIÓN AL MOTOR IA (GEMINI 2.5 PRO)
@@ -244,26 +249,41 @@ elif menu == "👤 Perfil":
     st.header("👤 Perfil God-Tier (Centro de Mando)")
     st.write("Rellena tus datos. La IA cruzará tu biometría, hormonas y logística para crear tu plan perfecto.")
     
-    # --- 1. BIOMETRÍA Y SALUD FEMENINA ---
+# --- 1. BIOMETRÍA Y SALUD FEMENINA ---
     with st.expander("1. Biometría y Salud Femenina", expanded=True):
-        col_b1, col_b2 = st.columns(2)
-        with col_b1:
-            sexo = st.selectbox("Sexo", ["Hombre", "Mujer"], index=0 if st.session_state.perfil.get('sexo', 'Hombre') == 'Hombre' else 1)
+        # Usamos columnas con un ratio 1:1 para asegurar el espacio
+        c1, c2 = st.columns([1, 1])
         
-        with col_b2:
+        with c1:
+            sexo = st.selectbox(
+                "Sexo", 
+                ["Hombre", "Mujer"], 
+                index=0 if st.session_state.perfil.get('sexo', 'Hombre') == 'Hombre' else 1,
+                key="perfil_sexo"
+            )
+        
+        with c2:
             perfil_hormonal = "Ninguno"
             if sexo == "Mujer":
                 opciones_hormonas = ["Ninguno", "Fase Folicular (Post-regla)", "Fase Lútea (Pre-regla)", "SOP", "Endometriosis", "Embarazo", "⚠️ RED-S (Falta de regla)"]
-                idx_horm = opciones_hormonas.index(st.session_state.perfil.get('perfil_hormonal', 'Ninguno')) if st.session_state.perfil.get('perfil_hormonal', 'Ninguno') in opciones_hormonas else 0
-                perfil_hormonal = st.selectbox("Fase / Estado Hormonal", opciones_hormonas, index=idx_horm)
+                # Buscamos el índice actual para que no se resetee al guardar
+                try:
+                    idx_horm = opciones_hormonas.index(st.session_state.perfil.get('perfil_hormonal', 'Ninguno'))
+                except ValueError:
+                    idx_horm = 0
+                
+                perfil_hormonal = st.selectbox("Fase / Estado Hormonal", opciones_hormonas, index=idx_horm, key="perfil_fase")
+            else:
+                st.info("Perfil optimizado para testosterona y salud masculina.")
         
-        col_b3, col_b4, col_b5 = st.columns(3)
-        with col_b3: edad = st.number_input("Edad", 14, 90, st.session_state.perfil.get('edad', 30))
-        with col_b4: altura = st.number_input("Altura (cm)", 100, 250, st.session_state.perfil.get('altura', 175))
-        with col_b5: peso = st.number_input("Peso (kg)", 30.0, 200.0, float(st.session_state.perfil.get('peso', 75.0)))
+        st.write("---") # Una línea sutil de separación
         
-        actividad = st.selectbox("NEAT Diario (Actividad fuera del gym)", ["Sedentaria", "Ligera", "Moderada", "Muy Activa"], index=2)
-
+        c3, c4, c5 = st.columns(3)
+        with c3: edad = st.number_input("Edad", 14, 90, st.session_state.perfil.get('edad', 30))
+        with c4: altura = st.number_input("Altura (cm)", 100, 250, st.session_state.perfil.get('altura', 175))
+        with c5: peso = st.number_input("Peso (kg)", 30.0, 200.0, float(st.session_state.perfil.get('peso', 75.0)))
+        
+        actividad = st.selectbox("NEAT Diario (Actividad fuera del gym)", ["Sedentaria", "Ligera", "Moderada", "Muy Activa"], index=2, key="perfil_neat")
     # --- 2. CRONOBIOLOGÍA Y CLÍNICA ---
     with st.expander("2. Cronobiología, Microbiota y Clínica"):
         st.markdown("**⏰ Tus Ritmos Circadianos**")
@@ -748,4 +768,4 @@ elif menu == "🩸 Progreso":
                         contents=[f"Evalúa esta foto de progreso fitness de una persona que busca {st.session_state.perfil['objetivo']}. Comenta amablemente sobre su desarrollo muscular visible y su postura.", Image.open(f_espejo)]
                     )
                     st.success("Evaluación de tu Coach:")
-                    st.write(res_espejo.text)                                                        
+                    st.write(res_espejo.text)                                                       
