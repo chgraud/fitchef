@@ -174,33 +174,64 @@ with st.sidebar:
 # ==========================================
     # 💾 SISTEMA DE GUARDADO Y CARGA (BÓVEDA)
     # ==========================================
-    st.sidebar.divider()
-    st.sidebar.subheader("💾 Tu Bóveda Biológica")
+with st.sidebar.expander("💾 Bóveda de ADN (Backup)"):
+    st.write("Guarda o restaura tu configuración completa.")
+
+    # 1. PREPARACIÓN DE DATOS (Para evitar el error de las horas)
+    # Hacemos copia para no romper el perfil real
+    perfil_para_exportar = st.session_state.perfil.copy()
     
-    # 1. PREPARAR LOS DATOS PARA DESCARGAR
-    # Recopilamos solo lo importante (evitamos basura temporal de la sesión)
-    datos_exportar = {
-        "perfil": st.session_state.perfil,
-        "despensa": st.session_state.despensa,
-        "mapa_muscular": st.session_state.mapa_muscular,
-        "historial_medico": st.session_state.get('historial_medico', {"analiticas": "Sin datos.", "lesiones": "Sin lesiones."}),
-        "maximos_rm": st.session_state.get('maximos_rm', {}),
-        "racha_entreno": st.session_state.racha_entreno
+    # Convertimos objetos de tiempo a texto
+    for k in ['hora_despertar', 'hora_dormir']:
+        if k in perfil_para_exportar and isinstance(perfil_para_exportar[k], datetime.time):
+            perfil_para_exportar[k] = perfil_para_exportar[k].strftime("%H:%M")
+
+    # 2. CREACIÓN DEL DICCIONARIO GLOBAL
+    datos_completos = {
+        "perfil": perfil_para_exportar,
+        "despensa": st.session_state.get('despensa', {}),
+        "historial_medico": st.session_state.get('historial_medico', {}),
+        "mapa_muscular": st.session_state.get('mapa_muscular', {}),
+        "racha_entreno": st.session_state.get('racha_entreno', 0)
     }
-    
-    # Convertimos el diccionario a un texto JSON formateado
-    json_guardado = json.dumps(datos_exportar, indent=4)
-    
-    # Botón de Descarga
-    st.sidebar.download_button(
-        label="⬇️ Descargar mi Perfil Biológico",
-        data=json_guardado,
-        file_name="mi_human_os_backup.json",
+
+    # 3. GENERACIÓN DEL JSON (Aquí definimos la variable con el nombre correcto)
+    # Usamos json_guardado para que coincida con lo que tu app busca
+    json_guardado = json.dumps(datos_completos, indent=4)
+
+    # 4. BOTÓN DE DESCARGA (Usando la variable definida arriba)
+    st.download_button(
+        label="📥 Descargar mi ADN",
+        data=json_guardado,  # <--- Fíjate que el nombre sea IDÉNTICO al de arriba
+        file_name="mi_perfil_human_os.json",
         mime="application/json",
         use_container_width=True
     )
-    
-    st.sidebar.write("---")
+
+    st.divider()
+
+    # 5. RESTAURAR DATOS (Cargar archivo)
+    archivo_carga = st.file_uploader("Subir archivo .json", type=['json'])
+    if archivo_carga is not None:
+        try:
+            datos_cargados = json.load(archivo_carga)
+            p_cargado = datos_cargados.get('perfil', {})
+            
+            # Re-convertir texto "07:00" a objeto tiempo real
+            for k in ['hora_despertar', 'hora_dormir']:
+                if k in p_cargado and isinstance(p_cargado[k], str):
+                    h, m = map(int, p_cargado[k].split(':'))
+                    p_cargado[k] = datetime.time(h, m)
+            
+            # Actualizar memoria
+            st.session_state.perfil = p_cargado
+            st.session_state.despensa = datos_cargados.get('despensa', {})
+            st.session_state.historial_medico = datos_cargados.get('historial_medico', {})
+            
+            st.success("¡ADN Restaurado!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error: {e}")
     
     # 2. CARGAR UNA COPIA DE SEGURIDAD ANTERIOR
     archivo_carga = st.sidebar.file_uploader("📂 Restaurar Copia de Seguridad", type=["json"], key="carga_boveda")
