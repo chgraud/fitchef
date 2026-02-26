@@ -236,6 +236,7 @@ if menu == "🏠 Inicio":
         st.caption("Tu rutina con análisis de fatiga y técnica.")
         
     st.image("https://images.unsplash.com/photo-1594882645126-14020914d58d?q=80&w=2085", use_container_width=True)
+
 # ==========================================
 # 👤 PANTALLA: PERFIL GOD-TIER
 # ==========================================
@@ -243,252 +244,149 @@ elif menu == "👤 Perfil":
     st.header("👤 Perfil God-Tier (Centro de Mando)")
     st.write("Rellena tus datos. La IA cruzará tu biometría, hormonas y logística para crear tu plan perfecto.")
     
-    with st.form("perfil_completo"):
+    # --- 1. BIOMETRÍA Y SALUD FEMENINA ---
+    with st.expander("1. Biometría y Salud Femenina", expanded=True):
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            sexo = st.selectbox("Sexo", ["Hombre", "Mujer"], index=0 if st.session_state.perfil.get('sexo', 'Hombre') == 'Hombre' else 1)
         
-        # --- 1. BIOMETRÍA Y SALUD FEMENINA ---
-        with st.expander("1. Biometría y Salud Femenina", expanded=True):
-            col_b1, col_b2 = st.columns(2)
-            with col_b1:
-                sexo = st.selectbox("Sexo", ["Hombre", "Mujer"], index=0 if st.session_state.perfil.get('sexo', 'Hombre') == 'Hombre' else 1)
-            
-            with col_b2:
-                perfil_hormonal = "Ninguno"
-                if sexo == "Mujer":
-                    opciones_hormonas = ["Ninguno", "Fase Folicular (Post-regla)", "Fase Lútea (Pre-regla)", "SOP", "Endometriosis", "Embarazo", "⚠️ RED-S (Falta de regla)"]
-                    idx_horm = opciones_hormonas.index(st.session_state.perfil.get('perfil_hormonal', 'Ninguno')) if st.session_state.perfil.get('perfil_hormonal', 'Ninguno') in opciones_hormonas else 0
-                    perfil_hormonal = st.selectbox("Fase / Estado Hormonal", opciones_hormonas, index=idx_horm)
-            
-            col_b3, col_b4, col_b5 = st.columns(3)
-            with col_b3: edad = st.number_input("Edad", 14, 90, st.session_state.perfil.get('edad', 30))
-            with col_b4: altura = st.number_input("Altura (cm)", 100, 250, st.session_state.perfil.get('altura', 175))
-            with col_b5: peso = st.number_input("Peso (kg)", 30.0, 200.0, float(st.session_state.perfil.get('peso', 75.0)))
-            
-            actividad = st.selectbox("NEAT Diario (Actividad fuera del gym)", ["Sedentaria", "Ligera", "Moderada", "Muy Activa"], index=2)
-
-        # --- 2. CRONOBIOLOGÍA Y CLÍNICA (NUEVO) ---
-        with st.expander("2. Cronobiología, Microbiota y Clínica"):
-            st.markdown("**⏰ Tus Ritmos Circadianos**")
-            col_c1, col_c2 = st.columns(2)
-            with col_c1:
-                # Usamos time_input para máxima precisión en el calendario
-                hora_despertar = st.time_input("Hora habitual de despertar", value=datetime.time(7, 0))
-            with col_c2:
-                hora_dormir = st.time_input("Hora habitual de dormir", value=datetime.time(23, 0))
-                
-            st.markdown("**🧬 Digestión y Sistema Nervioso**")
-            col_c3, col_c4 = st.columns(2)
-            with col_c3:
-                digestion = st.selectbox("Sensibilidad Digestiva (Microbiota)", ["Fuerte (Digiero piedras)", "Normal", "Pesada / Gases", "Intestino Irritable (FODMAP)"])
-            with col_c4:
-                cafeina = st.selectbox("Tolerancia a la Cafeína", ["Alta (Me duermo con un RedBull)", "Normal", "Baja (Me da taquicardia)"])
-                
-            lesiones = st.text_area("Lesiones o patologías a tener en cuenta:", value=st.session_state.perfil.get('lesiones', ''))
-            st.caption("🩸 *Nota: Podrás subir tus analíticas de sangre en la pestaña 'Progreso'.*")
-
-        # --- 3. OBJETIVOS Y LOGÍSTICA DE ENTRENO ---
-        with st.expander("3. Objetivos y Logística de Entreno"):
-            col_o1, col_o2 = st.columns(2)
-            with col_o1:
-                obj = st.selectbox("Programa (Objetivo)", ["Estética Funcional", "Powerbuilding (Fuerza+Masa)", "Shredding (Definición)", "Recomposición Femenina (Glúteo)", "Atleta Híbrido", "Longevidad"], index=0)
-            with col_o2:
-                experiencia = st.selectbox("Nivel", ["Principiante", "Intermedio", "Avanzado"], index=1)
-                
-            col_o3, col_o4, col_o5 = st.columns(3)
-            with col_o3: lugar_entreno = st.selectbox("Lugar", ["Gimnasio Comercial", "Home Gym", "Parque/Calistenia"])
-            with col_o4: horario_entreno = st.selectbox("Horario de entreno", ["Mañana (Ayunas)", "Mañana (Post-desayuno)", "Tarde", "Noche (Cuidado con pre-entrenos)"])
-            with col_o5: dias_gym = st.slider("Días/Semana", 1, 7, st.session_state.perfil.get('dias_entreno', 4))
-
-        # --- 4. NUTRICIÓN, COCINA Y UTENSILIOS ---
-       # --- 4. NUTRICIÓN, COCINA Y UTENSILIOS ---
-        with st.expander("4. 🍳 Cocina, Nutrición, Suplementos y Utensilios"):
-            col_n1, col_n2, col_n3 = st.columns(3)
-            with col_n1:
-                dieta_tipo = st.selectbox("Tipo de Dieta", ["Omnívora", "Vegetariana", "Vegana", "Keto", "Pescetariana"])
-            with col_n2:
-                n_comidas = st.number_input("Comidas/día", 1, 8, st.session_state.perfil.get('n_comidas', 4))
-            with col_n3:
-                ayuno = st.toggle("¿Ayuno Intermitente?", value=st.session_state.perfil.get('ayuno', False))
-            
-            st.markdown("**🛠️ Tu Arsenal de Cocina y Suplementación**")
-            opciones_utensilios = ["Sartén", "Olla", "Horno", "Microondas", "Airfryer", "Batidora", "Vaporera", "Robot de Cocina (Thermomix)"]
-            utensilios = st.multiselect("¿Qué electrodomésticos tienes?", opciones_utensilios, default=st.session_state.perfil.get('utensilios', ['Sartén', 'Microondas']))
-            tiempo_cocina = st.slider("Minutos máximos para cocinar (por comida)", 5, 120, st.session_state.perfil.get('tiempo_cocina', 30))
-            
-            col_n4, col_n5 = st.columns(2)
-            with col_n4:
-                alergias = st.text_input("Alergias o Intolerancias", value=st.session_state.perfil.get('alergias', ''))
-            with col_n5:
-                # ¡AQUÍ ESTÁ LA MAGIA RECUPERADA!
-                suplementos = st.text_input("Suplementos (Ej: Whey, Creatina, Magnesio)", value=st.session_state.perfil.get('suplementos', ''))
-                
-            presupuesto = st.select_slider("Presupuesto de la compra", options=["Económico", "Moderado", "Premium"])
-
-        # --- 5. MEMORIA GASTRONÓMICA ---
-        with st.expander("5. 🧠 Memoria Gastronómica IA"):
-            st.info("💡 **Tip:** Asegúrate de incluir fuentes de grasas insaturadas (aguacate, AOVE, nueces) en tus gustos para optimizar tu sistema hormonal.")
-            g_pos = st.text_area("AMAS (Ingredientes/Platos que te encantan):", value=", ".join(st.session_state.gustos_positivos))
-            g_neg = st.text_area("ODIAS (Lo que no quieres ver ni en pintura):", value=", ".join(st.session_state.gustos_negativos))
+        with col_b2:
+            perfil_hormonal = "Ninguno"
+            if sexo == "Mujer":
+                opciones_hormonas = ["Ninguno", "Fase Folicular (Post-regla)", "Fase Lútea (Pre-regla)", "SOP", "Endometriosis", "Embarazo", "⚠️ RED-S (Falta de regla)"]
+                idx_horm = opciones_hormonas.index(st.session_state.perfil.get('perfil_hormonal', 'Ninguno')) if st.session_state.perfil.get('perfil_hormonal', 'Ninguno') in opciones_hormonas else 0
+                perfil_hormonal = st.selectbox("Fase / Estado Hormonal", opciones_hormonas, index=idx_horm)
         
-        # --- BOTÓN DE GUARDADO MAESTRO ---
-        if st.form_submit_button("💾 BLINDAR PERFIL Y CALIBRAR IA", type="primary"):
-            # Actualizamos el diccionario con TODOS los datos nuevos
-            st.session_state.perfil.update({
-                'sexo': sexo, 'perfil_hormonal': perfil_hormonal, 'edad': edad, 'peso': peso, 'altura': altura, 
-                'actividad': actividad, 'objetivo': obj, 'experiencia': experiencia, 'lugar_entreno': lugar_entreno, 
-                'horario_entreno': horario_entreno, 'dias_entreno': dias_gym, 'dieta_tipo': dieta_tipo, 
-                'n_comidas': n_comidas, 'ayuno': ayuno, 'alergias': alergias, 'presupuesto': presupuesto,
-                'utensilios': utensilios, 'tiempo_cocina': tiempo_cocina, 'lesiones': lesiones,
-                'hora_despertar': hora_despertar.strftime("%H:%M"), # Guardamos como texto para la IA
-                'hora_dormir': hora_dormir.strftime("%H:%M"),
-                'sensibilidad_digestiva': digestion,
-                'tolerancia_cafeina': cafeina
-            })
-            # Limpiamos las listas de gustos
-            st.session_state.gustos_positivos = [g.strip() for g in g_pos.split(",") if g.strip()]
-            st.session_state.gustos_negativos = [g.strip() for g in g_neg.split(",") if g.strip()]
+        col_b3, col_b4, col_b5 = st.columns(3)
+        with col_b3: edad = st.number_input("Edad", 14, 90, st.session_state.perfil.get('edad', 30))
+        with col_b4: altura = st.number_input("Altura (cm)", 100, 250, st.session_state.perfil.get('altura', 175))
+        with col_b5: peso = st.number_input("Peso (kg)", 30.0, 200.0, float(st.session_state.perfil.get('peso', 75.0)))
+        
+        actividad = st.selectbox("NEAT Diario (Actividad fuera del gym)", ["Sedentaria", "Ligera", "Moderada", "Muy Activa"], index=2)
+
+    # --- 2. CRONOBIOLOGÍA Y CLÍNICA ---
+    with st.expander("2. Cronobiología, Microbiota y Clínica"):
+        st.markdown("**⏰ Tus Ritmos Circadianos**")
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            hora_despertar = st.time_input("Hora habitual de despertar", value=datetime.time(7, 0))
+        with col_c2:
+            hora_dormir = st.time_input("Hora habitual de dormir", value=datetime.time(23, 0))
             
-            st.success("¡Perfil God-Tier guardado! La IA ha asimilado tus ritmos circadianos, herramientas y biometría.")
-            time.sleep(1) # Pequeña pausa dramática para que se lea el mensaje
-            st.rerun()
+        st.markdown("**🧬 Digestión y Sistema Nervioso**")
+        col_c3, col_c4 = st.columns(2)
+        with col_c3:
+            digestion = st.selectbox("Sensibilidad Digestiva (Microbiota)", ["Fuerte (Digiero piedras)", "Normal", "Pesada / Gases", "Intestino Irritable (FODMAP)"])
+        with col_c4:
+            cafeina = st.selectbox("Tolerancia a la Cafeína", ["Alta (Me duermo con un RedBull)", "Normal", "Baja (Me da taquicardia)"])
+            
+        lesiones = st.text_area("Lesiones o patologías a tener en cuenta:", value=st.session_state.perfil.get('lesiones', ''))
+
+    # --- 3. OBJETIVOS Y LOGÍSTICA DE ENTRENO ---
+    with st.expander("3. Objetivos y Logística de Entreno"):
+        col_o1, col_o2 = st.columns(2)
+        with col_o1:
+            obj = st.selectbox("Programa (Objetivo)", ["Estética Funcional", "Powerbuilding (Fuerza+Masa)", "Shredding (Definición)", "Recomposición Femenina (Glúteo)", "Atleta Híbrido", "Longevidad"], index=0)
+        with col_o2:
+            experiencia = st.selectbox("Nivel", ["Principiante", "Intermedio", "Avanzado"], index=1)
+            
+        col_o3, col_o4, col_o5 = st.columns(3)
+        with col_o3: lugar_entreno = st.selectbox("Lugar", ["Gimnasio Comercial", "Home Gym", "Parque/Calistenia"])
+        with col_o4: horario_entreno = st.selectbox("Horario de entreno", ["Mañana (Ayunas)", "Mañana (Post-desayuno)", "Tarde", "Noche"])
+        with col_o5: dias_gym = st.slider("Días/Semana", 1, 7, st.session_state.perfil.get('dias_entreno', 4))
+
+    # --- 4. NUTRICIÓN, COCINA Y SUPLEMENTOS ---
+    with st.expander("4. 🍳 Cocina, Nutrición, Suplementos y Utensilios"):
+        col_n1, col_n2, col_n3 = st.columns(3)
+        with col_n1:
+            dieta_tipo = st.selectbox("Tipo de Dieta", ["Omnívora", "Vegetariana", "Vegana", "Keto", "Pescetariana"])
+        with col_n2:
+            n_comidas = st.number_input("Comidas/día", 1, 8, st.session_state.perfil.get('n_comidas', 4))
+        with col_n3:
+            ayuno = st.toggle("¿Ayuno Intermitente?", value=st.session_state.perfil.get('ayuno', False))
+        
+        st.markdown("**🛠️ Tu Arsenal**")
+        opciones_utensilios = ["Sartén", "Olla", "Horno", "Microondas", "Airfryer", "Batidora", "Vaporera", "Robot de Cocina"]
+        utensilios = st.multiselect("Electrodomésticos:", opciones_utensilios, default=st.session_state.perfil.get('utensilios', ['Sartén', 'Microondas']))
+        
+        col_n4, col_n5 = st.columns(2)
+        with col_n4: alergias = st.text_input("Alergias:", value=st.session_state.perfil.get('alergias', ''))
+        with col_n5: suplementos = st.text_input("Suplementos:", value=st.session_state.perfil.get('suplementos', ''))
+        
+        presupuesto = st.select_slider("Presupuesto:", options=["Económico", "Moderado", "Premium"])
+
+    # --- 5. MEMORIA GASTRONÓMICA ---
+    with st.expander("5. 🧠 Memoria Gastronómica IA"):
+        g_pos = st.text_area("AMAS (Ingredientes):", value=", ".join(st.session_state.gustos_positivos))
+        g_neg = st.text_area("ODIAS (Ingredientes):", value=", ".join(st.session_state.gustos_negativos))
+    
+    if st.button("💾 BLINDAR PERFIL Y CALIBRAR IA", type="primary", use_container_width=True):
+        st.session_state.perfil.update({
+            'sexo': sexo, 'perfil_hormonal': perfil_hormonal, 'edad': edad, 'peso': peso, 'altura': altura, 
+            'actividad': actividad, 'objetivo': obj, 'experiencia': experiencia, 'lugar_entreno': lugar_entreno, 
+            'horario_entreno': horario_entreno, 'dias_entreno': dias_gym, 'dieta_tipo': dieta_tipo, 
+            'n_comidas': n_comidas, 'ayuno': ayuno, 'alergias': alergias, 'suplementos': suplementos,
+            'presupuesto': presupuesto, 'utensilios': utensilios, 'hora_despertar': hora_despertar.strftime("%H:%M"),
+            'hora_dormir': hora_dormir.strftime("%H:%M"), 'sensibilidad_digestiva': digestion, 'tolerancia_cafeina': cafeina
+        })
+        st.session_state.gustos_positivos = [g.strip() for g in g_pos.split(",") if g.strip()]
+        st.session_state.gustos_negativos = [g.strip() for g in g_neg.split(",") if g.strip()]
+        st.success("¡Perfil guardado!")
+        st.rerun()
+
 # ==========================================
-# 🥗 PANTALLA: NUTRICIÓN PRO (Motor Bio-Hacking)
+# 🥗 PANTALLA: NUTRICIÓN PRO
 # ==========================================
-# --- 1. GESTIÓN DE DESPENSA, TICKETS Y VOZ ---
-    with st.expander("🛒 Tu Arsenal (Despensa y Escáner)", expanded=not bool(st.session_state.despensa)):
+elif menu == "🥗 Nutrición Pro":
+    st.header("🥗 Central Nutricional Adaptativa")
+    
+    with st.expander("🛒 Tu Arsenal (Despensa y Escáner)", expanded=True):
         t_nev, t_ticket, t_voz, t_man = st.tabs(["📸 Escáner Nevera", "🧾 Ticket", "🎙️ Dictado IA", "⌨️ Manual"])
         
         with t_nev:
-            usar_cam = st.toggle("Usar cámara en vivo (frontal)")
-            foto_nev = st.camera_input("Enfoca tus alimentos") if usar_cam else st.file_uploader("📷 Subir foto de nevera/despensa", type=['jpg', 'png'])
+            foto_nev = st.camera_input("Enfoca alimentos")
             if foto_nev and IA_ACTIVA:
-                with st.spinner("Visión IA escaneando alimentos..."):
-                    res = client.models.generate_content(
-                        model=MODELO_IA, 
-                        contents=["Lista los ingredientes que ves separados por comas. Solo los nombres de alimentos saludables.", Image.open(foto_nev)]
-                    )
-                    nuevos = [i.strip().lower() for i in res.text.split(",") if i.strip()]
-                    st.session_state.despensa = list(set(st.session_state.despensa + nuevos))
-                    st.success(f"Detectados: {', '.join(nuevos)}")
+                res = client.models.generate_content(model=MODELO_IA, contents=["Lista alimentos saludables separados por comas.", Image.open(foto_nev)])
+                st.session_state.despensa = list(set(st.session_state.despensa + [i.strip().lower() for i in res.text.split(",") if i.strip()]))
                     
         with t_ticket:
-            st.info("💡 Sube una foto del ticket. La IA extraerá solo lo que sirve para tu dieta.")
-            foto_ticket = st.file_uploader("🧾 Subir Ticket de Compra", type=['jpg', 'png', 'jpeg'])
+            foto_ticket = st.file_uploader("Subir Ticket", type=['jpg', 'png'])
             if foto_ticket and IA_ACTIVA:
-                with st.spinner("Hackeando el ticket del supermercado..."):
-                    res_ticket = client.models.generate_content(
-                        model=MODELO_IA,
-                        contents=["Analiza este recibo. Extrae SOLO alimentos saludables y enteros. Ignora procesados y precios. Separados por comas.", Image.open(foto_ticket)]
-                    )
-                    nuevos_t = [i.strip().lower() for i in res_ticket.text.split(",") if i.strip()]
-                    st.session_state.despensa = list(set(st.session_state.despensa + nuevos_t))
-                    st.success(f"Arsenal recargado con: {', '.join(nuevos_t)}")
+                res_ticket = client.models.generate_content(model=MODELO_IA, contents=["Extrae alimentos saludables del ticket.", Image.open(foto_ticket)])
+                st.session_state.despensa = list(set(st.session_state.despensa + [i.strip().lower() for i in res_ticket.text.split(",") if i.strip()]))
                     
         with t_voz:
-            st.info("🎙️ Abre la nevera y dicta lo que tienes. Jarvis hará el resto.")
-            audio_despensa = st.audio_input("Dictar inventario:")
+            audio_despensa = st.audio_input("Dictar:")
             if audio_despensa and IA_ACTIVA:
-                with st.spinner("Transcribiendo e inyectando en despensa..."):
-                    res_audio = client.models.generate_content(
-                        model=MODELO_IA,
-                        contents=["Escucha este audio y extrae SOLO los nombres de los alimentos mencionados. Devuélvelos en español, separados por comas.", audio_despensa]
-                    )
-                    nuevos_voz = [i.strip().lower() for i in res_audio.text.split(",") if i.strip()]
-                    st.session_state.despensa = list(set(st.session_state.despensa + nuevos_voz))
-                    st.success(f"Añadidos por voz: {', '.join(nuevos_voz)}")
-                    st.rerun()
+                res_audio = client.models.generate_content(model=MODELO_IA, contents=["Extrae nombres de alimentos.", audio_despensa])
+                st.session_state.despensa = list(set(st.session_state.despensa + [i.strip().lower() for i in res_audio.text.split(",") if i.strip()]))
+                st.rerun()
                     
         with t_man:
-            manual = st.text_input("Añadir a mano (ej: huevos, atún, arroz):")
-            if st.button("Añadir a Despensa", use_container_width=True):
+            manual = st.text_input("Añadir manual:")
+            if st.button("Añadir"):
                 st.session_state.despensa = list(set(st.session_state.despensa + [i.strip().lower() for i in manual.split(",") if i.strip()]))
-                st.rerun()
 
-        if st.session_state.despensa:
-            st.success(f"🥑 **Tu Arsenal Actual:** {', '.join(st.session_state.despensa).title()}")
-            if st.button("🗑️ Vaciar Arsenal"): 
-                st.session_state.despensa = []
-                st.rerun()
+        st.write(f"🥑 **Despensa:** {', '.join(st.session_state.despensa).title()}")
 
-    st.divider()
-
-    # --- 2. GENERADOR DE DIETA (EL CEREBRO DE LA IA) ---
-    if st.button("🚀 GENERAR PLAN SEMANAL (ALGORITMO GOD-TIER)", type="primary", use_container_width=True):
+    if st.button("🚀 GENERAR PLAN SEMANAL", type="primary", use_container_width=True):
         if IA_ACTIVA:
-            with st.spinner("Cruzando tu biometría, cronobiología, microbiota y reglas hormonales..."):
+            with st.spinner("IA calculando..."):
                 p = st.session_state.perfil
-                
-                # EL PROMPT MAESTRO (Aquí está toda la magia de los audios)
-                prompt = f"""
-                Eres el nutricionista clínico y deportivo más avanzado del mundo. Diseña una dieta semanal (Lunes a Domingo).
-                
-                [CLIENTE]: {p['sexo']}, {p['edad']} años, {p['peso']}kg. Objetivo: {p['objetivo']}. Nivel: {p['experiencia']}.
-                Entrena {p['dias_entreno']} días/semana. Horario de entreno: {p['horario_entreno']}.
-                Tipo de dieta: {p['dieta_tipo']}. Comidas/día: {p['n_comidas']}. Ayuno Intermitente: {'Sí' if p['ayuno'] else 'No'}.
-                
-                [REGLAS CLÍNICAS Y BIO-HACKING - OBLIGATORIAS]:
-                1. GRASAS INSATURADAS (REGLA DE ORO): Calcula un mínimo de 1g de grasa por kg de peso ({p['peso']}g mínimo). Prioriza aguacate, AOVE, frutos secos o pescado azul para optimizar su sistema hormonal.
-                2. GLUCÓGENO Y AGUA: La comida POST-ENTRENAMIENTO debe ser la más alta en carbohidratos (arroz, patata, avena). Tienes que añadir a esa comida una nota explicando: '1g de CH retiene 3g de agua en el músculo para rehidratar y recuperar'.
-                3. CRONOBIOLOGÍA Y CAFEÍNA: Se despierta a las {p.get('hora_despertar', '07:00')} y se duerme a las {p.get('hora_dormir', '23:00')}. Si entrena de noche y su tolerancia a la cafeína es '{p.get('tolerancia_cafeina', 'Normal')}', ADVIERTE si debe evitar pre-entrenos.
-                4. MICROBIOTA: Su digestión es '{p.get('sensibilidad_digestiva', 'Normal')}'. Si es pesada o FODMAP, elimina alimentos inflamatorios y añade pre/probióticos.
-                5. HORMONAS FEMENINAS: Está en fase '{p['perfil_hormonal']}'. Si es RED-S, PROHIBIDO EL DÉFICIT CALÓRICO, prescribe superávit. Si es fase lútea, sube grasas y baja hidratos.
-                6. LOGÍSTICA: Solo tiene estos utensilios: {p['utensilios']}. Ninguna receta puede tardar más de {p['tiempo_cocina']} minutos en prepararse.
-                
-                [DESPENSA ACTUAL]: {st.session_state.despensa}. Intenta priorizar estos ingredientes.
-                Amas: {st.session_state.gustos_positivos}. Odias: {st.session_state.gustos_negativos}. Alergias: {p['alergias']}.
-                
-                Devuelve SOLO un JSON estricto con este formato (asegúrate de incluir la "nota_ciencia" en cada comida):
-                {{ 
-                  "Lunes": [ 
-                    {{"tipo": "Desayuno", "plato": "Nombre del plato", "ingredientes": ["ing1", "ing2"], "nota_ciencia": "Explicación breve de por qué este plato."}} 
-                  ] 
-                }}
-                """
-                
+                prompt = f"Dieta semanal JSON. Obj: {p['objetivo']}. Reglas: Grasas min 1g/kg. Post-entreno CH alto. Fase: {p['perfil_hormonal']}. Despensa: {st.session_state.despensa}."
                 try:
                     res = client.models.generate_content(model=MODELO_IA, contents=prompt)
                     texto = res.text.replace("```json", "").replace("```", "").strip()
                     st.session_state.plan_estructurado = json.loads(texto)
-                    st.success("¡Algoritmo nutricional completado con éxito!")
-                except Exception as e: 
-                    st.error(f"Error en la matriz de la dieta. La IA devolvió un formato incorrecto. Reintenta.")
+                    st.success("¡Dieta lista!")
+                except: st.error("Error IA.")
 
-    # --- 3. VISUALIZACIÓN DEL PLAN Y CHECK-IN DE COMIDAS ---
     if st.session_state.plan_estructurado:
-        col_cal1, col_cal2 = st.columns([3, 1])
-        with col_cal1:
-            dia_sel = st.selectbox("📅 Día de la semana:", list(st.session_state.plan_estructurado.keys()))
-        with col_cal2:
-            # Botón para descargar a Google Calendar / Apple Calendar
-            ics_data = generar_ics(st.session_state.plan_estructurado)
-            st.download_button("📥 Descargar Calendario", data=ics_data, file_name="Dieta_BioHacker.ics", mime="text/calendar")
-        
-        comidas = st.session_state.plan_estructurado.get(dia_sel, [])
-        for i, c in enumerate(comidas):
-            id_c = f"{dia_sel}_{i}"
+        dia = st.selectbox("Día:", list(st.session_state.plan_estructurado.keys()))
+        for c in st.session_state.plan_estructurado.get(dia, []):
             with st.container(border=True):
-                st.markdown(f"### 🍽️ {c.get('tipo', 'Comida')}: {c.get('plato', '')}")
-                st.write(f"**Ingredientes:** {', '.join(c.get('ingredientes', [])).title()}")
-                
-                # Nota científica generada por la IA
-                if 'nota_ciencia' in c:
-                    st.info(f"🧬 **Bio-Hack:** {c['nota_ciencia']}")
-                
-                if id_c in st.session_state.comidas_completadas:
-                    st.success("✅ Macro ingerido y racha actualizada")
-                else:
-                    if st.button("✅ Marcar como Comido (Resta de despensa)", key=f"h_{id_c}"):
-                        st.session_state.comidas_completadas.append(id_c)
-                        st.session_state.racha_nutricion += 10 # Premiamos con puntos
-                        
-                        # Magia: Restamos ingredientes de la despensa automáticamente
-                        for ing in c.get('ingredientes', []):
-                            for item_despensa in st.session_state.despensa:
-                                if item_despensa in ing.lower() or ing.lower() in item_despensa:
-                                    try:
-                                        st.session_state.despensa.remove(item_despensa)
-                                    except ValueError:
-                                        pass
-                        st.rerun()    
+                st.write(f"### {c.get('tipo')}: {c.get('plato')}")
+                st.info(f"🧬 {c.get('nota_ciencia', 'Bio-Hack activo.')}")   
 # ==========================================
 # 🏋️‍♂️ PANTALLA: ENTRENADOR IA (Biomecánica y Fatiga)
 # ==========================================
@@ -707,4 +605,4 @@ elif menu == "🩸 Progreso":
                         contents=[f"Evalúa esta foto de progreso fitness de una persona que busca {st.session_state.perfil['objetivo']}. Comenta amablemente sobre su desarrollo muscular visible y su postura.", Image.open(f_espejo)]
                     )
                     st.success("Evaluación de tu Coach:")
-                    st.write(res_espejo.text)                                     
+                    st.write(res_espejo.text)                                                             
