@@ -299,7 +299,8 @@ elif menu == "👤 Perfil":
             with col_o5: dias_gym = st.slider("Días/Semana", 1, 7, st.session_state.perfil.get('dias_entreno', 4))
 
         # --- 4. NUTRICIÓN, COCINA Y UTENSILIOS ---
-        with st.expander("4. 🍳 Cocina, Nutrición y Utensilios"):
+       # --- 4. NUTRICIÓN, COCINA Y UTENSILIOS ---
+        with st.expander("4. 🍳 Cocina, Nutrición, Suplementos y Utensilios"):
             col_n1, col_n2, col_n3 = st.columns(3)
             with col_n1:
                 dieta_tipo = st.selectbox("Tipo de Dieta", ["Omnívora", "Vegetariana", "Vegana", "Keto", "Pescetariana"])
@@ -308,13 +309,46 @@ elif menu == "👤 Perfil":
             with col_n3:
                 ayuno = st.toggle("¿Ayuno Intermitente?", value=st.session_state.perfil.get('ayuno', False))
             
-            st.markdown("**🛠️ Tu Arsenal de Cocina**")
+            st.markdown("**🛠️ Tu Arsenal de Cocina y Suplementación**")
             opciones_utensilios = ["Sartén", "Olla", "Horno", "Microondas", "Airfryer", "Batidora", "Vaporera", "Robot de Cocina (Thermomix)"]
             utensilios = st.multiselect("¿Qué electrodomésticos tienes?", opciones_utensilios, default=st.session_state.perfil.get('utensilios', ['Sartén', 'Microondas']))
             tiempo_cocina = st.slider("Minutos máximos para cocinar (por comida)", 5, 120, st.session_state.perfil.get('tiempo_cocina', 30))
             
-            alergias = st.text_input("Alergias o Intolerancias", value=st.session_state.perfil.get('alergias', ''))
+            col_n4, col_n5 = st.columns(2)
+            with col_n4:
+                alergias = st.text_input("Alergias o Intolerancias", value=st.session_state.perfil.get('alergias', ''))
+            with col_n5:
+                # ¡AQUÍ ESTÁ LA MAGIA RECUPERADA!
+                suplementos = st.text_input("Suplementos (Ej: Whey, Creatina, Magnesio)", value=st.session_state.perfil.get('suplementos', ''))
+                
             presupuesto = st.select_slider("Presupuesto de la compra", options=["Económico", "Moderado", "Premium"])
+
+        # --- 5. MEMORIA GASTRONÓMICA ---
+        with st.expander("5. 🧠 Memoria Gastronómica IA"):
+            st.info("💡 **Tip:** Asegúrate de incluir fuentes de grasas insaturadas (aguacate, AOVE, nueces) en tus gustos para optimizar tu sistema hormonal.")
+            g_pos = st.text_area("AMAS (Ingredientes/Platos que te encantan):", value=", ".join(st.session_state.gustos_positivos))
+            g_neg = st.text_area("ODIAS (Lo que no quieres ver ni en pintura):", value=", ".join(st.session_state.gustos_negativos))
+        
+        # --- BOTÓN DE GUARDADO MAESTRO ---
+        if st.form_submit_button("💾 BLINDAR PERFIL Y CALIBRAR IA", type="primary"):
+            st.session_state.perfil.update({
+                'sexo': sexo, 'perfil_hormonal': perfil_hormonal, 'edad': edad, 'peso': peso, 'altura': altura, 
+                'actividad': actividad, 'objetivo': obj, 'experiencia': experiencia, 'lugar_entreno': lugar_entreno, 
+                'horario_entreno': horario_entreno, 'dias_entreno': dias_gym, 'dieta_tipo': dieta_tipo, 
+                'n_comidas': n_comidas, 'ayuno': ayuno, 'alergias': alergias, 
+                'suplementos': suplementos, # ¡Añadido al guardado!
+                'presupuesto': presupuesto, 'utensilios': utensilios, 'tiempo_cocina': tiempo_cocina, 'lesiones': lesiones,
+                'hora_despertar': hora_despertar.strftime("%H:%M"),
+                'hora_dormir': hora_dormir.strftime("%H:%M"),
+                'sensibilidad_digestiva': digestion,
+                'tolerancia_cafeina': cafeina
+            })
+            st.session_state.gustos_positivos = [g.strip() for g in g_pos.split(",") if g.strip()]
+            st.session_state.gustos_negativos = [g.strip() for g in g_neg.split(",") if g.strip()]
+            
+            st.success("¡Perfil God-Tier guardado! La IA ha asimilado tus ritmos circadianos, herramientas y biometría.")
+            time.sleep(1)
+            st.rerun()
 
         # --- 5. MEMORIA GASTRONÓMICA ---
         with st.expander("5. 🧠 Memoria Gastronómica IA"):
@@ -700,4 +734,4 @@ elif menu == "🩸 Progreso":
                         contents=[f"Evalúa esta foto de progreso fitness de una persona que busca {st.session_state.perfil['objetivo']}. Comenta amablemente sobre su desarrollo muscular visible y su postura.", Image.open(f_espejo)]
                     )
                     st.success("Evaluación de tu Coach:")
-                    st.write(res_espejo.text)
+                    st.write(res_espejo.text)                        
