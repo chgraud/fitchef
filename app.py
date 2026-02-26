@@ -807,48 +807,7 @@ elif menu == "🏋️‍♂️ Entrenador IA":
                     except Exception as e:
                         st.error("Error al procesar el vídeo. Intenta grabar una toma más corta (menos de 15 segundos).")    
 
-        # --- GENERADOR DE MICROCICLO SEMANAL ---
-        if st.button("💪 GENERAR MICROCICLO SEMANAL", type="primary", use_container_width=True):
-            if IA_ACTIVA:
-                with st.spinner(f"Programando {st.session_state.perfil.get('dias_entreno', 4)} días de entreno con TUT y RIR..."):
-                    p = st.session_state.perfil
-                    ck = st.session_state.checkin_hoy
-                    mapa = st.session_state.mapa_muscular
-                    bestia = "¡MODO BESTIA ACTIVADO! RIR al 0 (Fallo) y volumen +15%." if st.session_state.modo_bestia else ""
-                    
-                    prompt_entreno = f"""
-                    Eres un programador de fuerza de élite. 
-                    Cliente: {p['objetivo']}, Nivel: {p['experiencia']}, Material: {p['lugar_entreno']}. Lesiones: {p['lesiones']}.
-                    {bestia}
-                    
-                    [PUNTO DE PARTIDA HOY]: Sueño: {ck['horas_sueno_anoche']}h. Fatiga inicial: {mapa}.
-                    
-                    MISIÓN: Diseña un Microciclo (1 semana) exacto de {p.get('dias_entreno', 4)} días de entrenamiento.
-                    
-                    REGLAS OBLIGATORIAS:
-                    1. Distribuye el volumen inteligentemente para no solapar músculos fatigados.
-                    2. Prescribe TUT (Tempo, ej: 3-1-X-1) y RIR (Reps en Reserva, ej: 1-2) para cada ejercicio.
-                    
-                    Devuelve un JSON estricto con esta estructura exacta:
-                    {{
-                      "diagnostico_semanal": "Explicación de la estrategia de la semana...",
-                      "dias": {{
-                        "Día 1 - Torso": [
-                          {{"nombre": "Press Banca", "series": 3, "reps": "8-10", "rir": "1-2", "tut": "3-1-X-1", "descanso": "90s", "video": "https://www.youtube.com/results?search_query=ejecucion+press+banca"}}
-                        ],
-                        "Día 2 - Pierna": [ ]
-                      }}
-                    }}
-                    """
-                    try:
-                        res = client.models.generate_content(model=MODELO_IA, contents=prompt_entreno)
-                        texto = res.text.replace("```json", "").replace("```", "").strip()
-                        st.session_state.rutina_estructurada = json.loads(texto)
-                        st.success("¡Microciclo Semanal generado con éxito!")
-                    except Exception as e:
-                        st.error("Error de la IA al generar el formato semanal.")
-
-        # --- MOSTRAR EL PLAN SEMANAL (CUADRO DE MANDOS) ---
+            # --- MOSTRAR EL PLAN SEMANAL (CUADRO DE MANDOS) ---
         if st.session_state.rutina_estructurada and "dias" in st.session_state.rutina_estructurada:
             st.info(f"🧠 **Estrategia del Coach:** {st.session_state.rutina_estructurada.get('diagnostico_semanal', '')}")
             
