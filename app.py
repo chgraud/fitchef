@@ -52,19 +52,32 @@ except Exception as e:
 # Aquí definimos la estructura del usuario para que NUNCA se borre al recargar
 
 # --- BUSCA ESTO AL PRINCIPIO DE TU CÓDIGO ---
+# --- COPIA ESTO AL PRINCIPIO (Borra el anterior de perfil) ---
 if 'perfil' not in st.session_state:
     st.session_state.perfil = {
+        # Identidad y Biometría
         "nombre": "", "sexo": "Hombre", "edad": 25, "peso": 70.0, "altura": 170, "actividad": "Moderada",
+        "objetivo": "Estética Funcional", "experiencia": "Intermedio",
+        
+        # Cronobiología y Clínica
         "hora_despertar": datetime.time(7, 0), "hora_dormir": datetime.time(23, 0),
         "digestion": "Normal", "cafeina": "Normal", "lesiones_historial": "",
-        "objetivo": "Estética Funcional", "experiencia": "Intermedio",
+        
+        # Logística y Entrenamiento
         "lugar_entreno": "Gimnasio Comercial", "horario_entreno": "Tarde", "dias_entreno": 4,
         "estres_base": "Moderado", "sueno_base": "Normal (6-8h)",
+        
+        # Nutrición y Logística (AQUÍ ESTABAN LOS ERRORES)
         "dieta_base": "Omnívora", "n_comidas": 4, "ayuno": False,
         "presupuesto": "Moderado", "estilo_cocina": "Rápido (15-20 min)",
-        "utensilios": ["Sartén", "Microondas"], "suplementos": "", 
-        "restricciones": "",  # <--- ¡ESTA ES LA QUE TE FALTA!
-        "gustos_positivos": "", "gustos_negativos": "", "alergias": "",
+        "utensilios": ["Sartén", "Microondas"], 
+        "suplementos": "",           # <--- Nombre unificado
+        "restricciones": "",          # <--- Nombre unificado
+        
+        # Memoria Gastronómica
+        "gustos_positivos": "", "gustos_negativos": "",
+        
+        # Modo Bio-Hacker
         "bio_hacker_mode": False, "protocolo_metabolico": "Balanceado",
         "salud_intestinal": [], "semana_mesociclo": 1, "perfil_hormonal": "Ninguno"
     }
@@ -381,11 +394,19 @@ elif menu == "👤 Perfil":
             p['realidad_diaria'] = st.selectbox("Contexto de comidas", ["Como en casa", "Llevo Tupper", "Restaurante / Menú del día"])
 
     # --- BLOQUE 4: SEGURIDAD Y SUPLEMENTOS ---
+    # --- DENTRO DEL EXPANDER 4 (Nutrición y Arsenal) ---
     with st.container(border=True):
         st.subheader("💊 Seguridad y Arsenal")
-        p['restricciones'] = st.text_area("Alergias, intolerancias o alimentos que ODIAS", value=p['restricciones'], placeholder="Ej: Celíaco, odio el pepino...")
-        p['suplementos_disponibles'] = st.text_area("Suplementos que ya tienes", value=p['suplementos_disponibles'], placeholder="Ej: Creatina, Proteína Whey, Omega 3, Magnesio...")
-
+        # Cambiado de 'alergias' a 'restricciones'
+        p['restricciones'] = st.text_area("Alergias, intolerancias o alimentos que ODIAS", 
+                                         value=p.get('restricciones', ''), 
+                                         placeholder="Ej: Celíaco, odio el pepino...")
+        
+        # Cambiado de 'suplementos_disponibles' a 'suplementos'
+        p['suplementos'] = st.text_area("Suplementos que ya tienes", 
+                                       value=p.get('suplementos', ''), 
+                                       placeholder="Ej: Creatina, Proteína Whey...")
+        
     # --- BLOQUE 5: EL INTERRUPTOR BIO-HACKER ---
     st.divider()
     p['bio_hacker_mode'] = st.toggle("🚀 ACTIVAR MODO BIO-HACKER & CLÍNICO", value=p['bio_hacker_mode'])
