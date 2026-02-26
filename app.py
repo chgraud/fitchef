@@ -557,11 +557,11 @@ elif menu == "🏋️‍♂️ Entrenador IA":
     st.header("🏋️‍♂️ Entrenador Personal y Biomecánica")
     
     t_rutina, t_coach = st.tabs(["📋 Tu Rutina de Hoy", "📹 Coach Técnico (Vídeo)"])
-    
+        
     with t_rutina:
         # --- MAPA DE FATIGA MUSCULAR ---
-        st.subheader("🔥 Mapa de Recuperación Muscular")
-        st.write("Estado de tu Sistema Nervioso (SNC) y grupos musculares. La IA evitará lo que esté en rojo.")
+        st.subheader("🔥 Mapa de Recuperación Muscular (Auto-Regulación)")
+        st.write("Estado de tu Sistema Nervioso (SNC) y grupos musculares. Si un músculo baja del 40%, descánsalo.")
         
         cols_mapa = st.columns(4)
         musculos = list(st.session_state.mapa_muscular.keys())
@@ -572,6 +572,90 @@ elif menu == "🏋️‍♂️ Entrenador IA":
                 st.metric(label=f"{color} {m}", value=f"{valor}%")
         
         st.divider()
+
+        # --- GENERADOR DE MICROCICLO SEMANAL ---
+        if st.button("💪 GENERAR MICROCICLO SEMANAL", type="primary", use_container_width=True):
+            if IA_ACTIVA:
+                with st.spinner(f"Programando {st.session_state.perfil.get('dias_entreno', 4)} días de entreno con TUT y RIR..."):
+                    p = st.session_state.perfil
+                    ck = st.session_state.checkin_hoy
+                    mapa = st.session_state.mapa_muscular
+                    bestia = "¡MODO BESTIA ACTIVADO! RIR al 0 (Fallo) y volumen +15%." if st.session_state.modo_bestia else ""
+                    
+                    prompt_entreno = f"""
+                    Eres un programador de fuerza de élite. 
+                    Cliente: {p['objetivo']}, Nivel: {p['experiencia']}, Material: {p['lugar_entreno']}. Lesiones: {p['lesiones']}.
+                    {bestia}
+                    
+                    [PUNTO DE PARTIDA HOY]: Sueño: {ck['horas_sueno_anoche']}h. Fatiga inicial: {mapa}.
+                    
+                    MISIÓN: Diseña un Microciclo (1 semana) exacto de {p.get('dias_entreno', 4)} días de entrenamiento.
+                    
+                    REGLAS OBLIGATORIAS:
+                    1. Distribuye el volumen inteligentemente para no solapar músculos fatigados.
+                    2. Prescribe TUT (Tempo, ej: 3-1-X-1) y RIR (Reps en Reserva, ej: 1-2) para cada ejercicio.
+                    
+                    Devuelve un JSON estricto con esta estructura exacta:
+                    {{
+                      "diagnostico_semanal": "Explicación de la estrategia de la semana...",
+                      "dias": {{
+                        "Día 1 - Torso": [
+                          {{"nombre": "Press Banca", "series": 3, "reps": "8-10", "rir": "1-2", "tut": "3-1-X-1", "descanso": "90s", "video": "https://www.youtube.com/results?search_query=ejecucion+press+banca"}}
+                        ],
+                        "Día 2 - Pierna": [ ]
+                      }}
+                    }}
+                    """
+                    try:
+                        res = client.models.generate_content(model=MODELO_IA, contents=prompt_entreno)
+                        texto = res.text.replace("```json", "").replace("```", "").strip()
+                        st.session_state.rutina_estructurada = json.loads(texto)
+                        st.success("¡Microciclo Semanal generado con éxito!")
+                    except Exception as e:
+                        st.error("Error de la IA al generar el formato semanal.")
+
+        # --- MOSTRAR EL PLAN SEMANAL (CUADRO DE MANDOS) ---
+        if st.session_state.rutina_estructurada and "dias" in st.session_state.rutina_estructurada:
+            st.info(f"🧠 **Estrategia del Coach:** {st.session_state.rutina_estructurada.get('diagnostico_semanal', '')}")
+            
+            # Selector de días como en nutrición
+            dia_entreno = st.selectbox("📅 Selecciona tu sesión:", list(st.session_state.rutina_estructurada["dias"].keys()))
+            
+            st.write(f"### 🏋️‍♂️ Rutina: {dia_entreno}")
+            
+            for i, ej in enumerate(st.session_state.rutina_estructurada["dias"].get(dia_entreno, [])):
+                id_ej = f"ej_{dia_entreno}_{i}"
+                with st.container(border=True):
+                    st.subheader(f"🎯 {ej['nombre']}")
+                    
+                    # Variables de hipertrofia
+                    st.write(f"**Series:** {ej['series']} | **Reps:** {ej['reps']} | **Descanso:** {ej['descanso']}")
+                    st.markdown(f"⏱️ **TUT (Tempo):** `{ej.get('tut', 'Controlado')}` | 🎯 **RIR Objetivo:** `{ej.get('rir', '1-2')}`")
+                    st.markdown(f"📺 [Ver Técnica en Vídeo]({ej.get('video', '#')})")
+                    
+                    st.divider()
+                    
+                    c_e1, c_e2, c_e3 = st.columns([1,1,1])
+                    
+                    with c_e1: 
+                        carga = st.number_input("Peso (kg)", 0.0, 300.0, step=2.5, key=f"w_{id_ej}")
+                    
+                    with c_e2:
+                        rir_real = st.slider("RIR Real logrado", 0, 5, 2, help="0 = Fallo. 3 = Podías 3 más.", key=f"rir_{id_ej}")
+                    
+                    with c_e3:
+                        if st.button("🔄 SUSTITUIR", key=f"occ_{id_ej}", use_container_width=True):
+                            with st.spinner("Buscando alternativa..."):
+                                res_alt = client.models.generate_content(model=MODELO_IA, contents=f"Dame 1 sustituto para {ej['nombre']}. Solo el nombre.")
+                                st.warning(f"Alternativa: {res_alt.text}")
+                        
+                        if st.button("✅ REGISTRAR SERIE", key=f"reg_{id_ej}", type="primary", use_container_width=True):
+                            st.session_state.historial_cargas[ej['nombre']] = {"peso": carga, "rir": rir_real}
+                            st.session_state.racha_entreno += 1
+                            st.session_state.mapa_muscular["SNC"] = max(0, st.session_state.mapa_muscular["SNC"] - 5)
+                            st.success(f"¡Registrado! RIR {rir_real} anotado. SNC fatigado.")
+                            time.sleep(1)
+                            st.rerun()
 
         # --- GENERADOR DE ENTRENAMIENTO INTELIGENTE (CON RIR Y TUT) ---
         if st.button("💪 GENERAR SESIÓN ADAPTATIVA", type="primary", use_container_width=True):
@@ -758,4 +842,4 @@ elif menu == "🩸 Progreso":
                         contents=[f"Evalúa esta foto de progreso fitness de una persona que busca {st.session_state.perfil['objetivo']}. Comenta amablemente sobre su desarrollo muscular visible y su postura.", Image.open(f_espejo)]
                     )
                     st.success("Evaluación de tu Coach:")
-                    st.write(res_espejo.text)                                                        
+                    st.write(res_espejo.text)                        
