@@ -424,6 +424,67 @@ elif menu == "👤 Perfil":
     if st.button("💾 SINCRONIZAR ADN BIOLÓGICO", type="primary", use_container_width=True):
         st.success("¡Perfil Human OS actualizado!")
         st.balloons()
+
+elif menu == "🏥 Clínica Bio-Hacking":
+    # 1. Verificamos si el modo Bio-Hacker está activo
+    es_bio_hacker = st.session_state.perfil.get('bio_hacker_mode', False)
+
+    if not es_bio_hacker:
+        # Si NO está activo, mostramos un mensaje elegante y no una pantalla vacía
+        st.warning("🔒 SECCIÓN RESTRINGIDA")
+        st.info("Para acceder al análisis de biomarcadores y clínica avanzada, activa el **Modo Bio-Hacker** en tu 👤 Perfil.")
+        if st.button("Ir al Perfil ahora"):
+            st.info("Usa el menú lateral para ir a 👤 Perfil y activa el interruptor 🚀.")
+    
+    else:
+        # Si SÍ está activo, desplegamos TODA la artillería
+        st.header("🏥 Centro Médico y Longevidad (Modo Bio-Hacker)")
+        st.write("Sube tus pruebas para que la IA calibre tu nutrición y entrenamiento con precisión médica.")
+
+        # Dividimos en 2 columnas: Sangre y Biomecánica
+        c_med1, c_med2 = st.columns(2)
+
+        with c_med1:
+            st.subheader("🩸 Analíticas de Sangre")
+            archivo_sangre = st.file_uploader("Subir PDF o Foto de Analítica", type=['jpg', 'png', 'jpeg', 'pdf'])
+            
+            if archivo_sangre:
+                if st.button("🔬 Analizar Biomarcadores", use_container_width=True):
+                    with st.spinner("Extrayendo niveles de hierro, vitaminas y hormonas..."):
+                        # Aquí va tu lógica de IA (client.models.generate_content)
+                        # Por ahora simulamos que guarda el resultado:
+                        st.session_state.historial_medico["analiticas"] = "Analítica procesada: Deficiencia de Vitamina D detectada."
+                        st.success("¡Datos clínicos integrados!")
+
+            # Cuadro de texto para ver lo que la IA sabe de tu sangre
+            st.text_area("Diagnóstico Metabólico Actual:", 
+                        value=st.session_state.historial_medico.get('analiticas', 'Sin datos'),
+                        height=150)
+
+        with c_med2:
+            st.subheader("🦴 Biomecánica y Lesiones")
+            archivo_fisio = st.file_uploader("Subir Informe del Fisio / Resonancia", type=['jpg', 'png', 'jpeg', 'pdf'])
+            
+            if archivo_fisio:
+                if st.button("🔍 Analizar Limitaciones", use_container_width=True):
+                    with st.spinner("Evaluando restricciones de movimiento..."):
+                        st.session_state.historial_medico["lesiones"] = "Lesión detectada: Tendinitis supraespinoso (Evitar press militar)."
+                        st.success("¡Restricciones de entrenamiento actualizadas!")
+
+            # Cuadro de texto para ver las lesiones
+            st.text_area("Limitaciones Físicas Actuales:", 
+                        value=st.session_state.historial_medico.get('lesiones', 'Sin lesiones'),
+                        height=150)
+
+        # --- SECCIÓN DE LONGEVIDAD (Extra para Bio-Hackers) ---
+        st.divider()
+        st.subheader("🧬 Marcadores de Longevidad")
+        col_l1, col_l2 = st.columns(2)
+        with col_l1:
+            st.metric("Vitamina D Objetivo", "50-70 ng/mL", "+15% vs media")
+        with col_l2:
+            st.metric("Ratio Triglicéridos/HDL", "< 2.0", "Óptimo")
+
 # ==========================================
 # 🥗 PANTALLA: NUTRICIÓN PRO (El Arsenal del Chef)
 # ==========================================
