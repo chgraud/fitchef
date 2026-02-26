@@ -250,7 +250,7 @@ elif menu == "👤 Perfil":
     st.write("Rellena tus datos. La IA cruzará tu biometría, hormonas y logística para crear tu plan perfecto.")
     
 # --- 1. BIOMETRÍA Y SALUD FEMENINA ---
-    with st.expander("1. Biometría y Salud", expanded=True):
+    with st.expander("1. Biometría y Salud Femenina", expanded=True):
         # Usamos columnas con un ratio 1:1 para asegurar el espacio
         c1, c2 = st.columns([1, 1])
         
@@ -573,34 +573,32 @@ elif menu == "🏋️‍♂️ Entrenador IA":
         
         st.divider()
 
-        # --- GENERADOR DE ENTRENAMIENTO INTELIGENTE ---
+        # --- GENERADOR DE ENTRENAMIENTO INTELIGENTE (CON RIR Y TUT) ---
         if st.button("💪 GENERAR SESIÓN ADAPTATIVA", type="primary", use_container_width=True):
             if IA_ACTIVA:
-                with st.spinner("Analizando tu fatiga, horas de sueño y estrés para crear el entreno perfecto..."):
+                with st.spinner("Calculando volumen, RIR y Tempo (TUT) óptimos para hoy..."):
                     p = st.session_state.perfil
                     ck = st.session_state.checkin_hoy
                     mapa = st.session_state.mapa_muscular
-                    bestia = "¡MODO BESTIA ACTIVADO! Sube la intensidad y el volumen un 15%." if st.session_state.modo_bestia else ""
+                    bestia = "¡MODO BESTIA ACTIVADO! Sube la intensidad, RIR al 0 (Fallo) y volumen un 15%." if st.session_state.modo_bestia else ""
                     
                     prompt_entreno = f"""
-                    Eres un entrenador de fuerza de élite y fisioterapeuta.
-                    Cliente: {p['objetivo']}, Nivel: {p['experiencia']}, Lugar: {p['lugar_entreno']}. Lesiones: {p['lesiones']}.
+                    Eres un entrenador de fuerza de élite. Cliente: {p['objetivo']}, Nivel: {p['experiencia']}, Lugar: {p['lugar_entreno']}. Lesiones: {p['lesiones']}.
                     {bestia}
                     
-                    [ESTADO FÍSICO HOY]:
-                    - Sueño anoche: {ck['horas_sueno_anoche']}h. Agujetas (1-10): {ck['nivel_agujetas']}. Estrés: {ck['estres_hoy']}.
-                    - Mapa de Fatiga (100% es fresco, 0% es destruido): {mapa}.
+                    [ESTADO FÍSICO HOY]: Sueño: {ck['horas_sueno_anoche']}h. Agujetas: {ck['nivel_agujetas']}. Estrés: {ck['estres_hoy']}.
+                    Mapa Fatiga: {mapa}.
                     
                     REGLAS OBLIGATORIAS:
-                    1. PROHIBIDO prescribir ejercicios para músculos que estén por debajo del 50%.
-                    2. Si ha dormido menos de 6 horas o el estrés es 'Alto', reduce el volumen total (menos series) para no freír el Sistema Nervioso.
-                    3. Genera una frase de diagnóstico inicial explicando por qué has elegido esta rutina basándote en su fatiga y sueño.
+                    1. NO uses músculos por debajo del 50%.
+                    2. Prescribe TUT (Tempo, ej: 3-1-1-1 o 4-0-X-0) y RIR (Reps en Reserva, ej: 1-2).
+                    3. Si durmió poco o hay estrés, sube el RIR (ej. RIR 3) para proteger el Sistema Nervioso Central.
                     
-                    Devuelve un JSON estricto con este formato:
+                    Devuelve un JSON estricto:
                     {{
-                      "diagnostico": "Tu texto explicando la elección...",
+                      "diagnostico": "Explicación de la carga elegida hoy...",
                       "rutina": [
-                        {{"nombre": "Sentadilla Búlgara", "series": 3, "reps": "8-10", "descanso": "90s", "video": "https://www.youtube.com/results?search_query=ejecucion+correcta+sentadilla+bulgara"}}
+                        {{"nombre": "Sentadilla Búlgara", "series": 3, "reps": "8-10", "rir": "1-2", "tut": "3-1-X-1", "descanso": "90s", "video": "https://www.youtube.com/results?search_query=ejecucion+correcta+sentadilla+bulgara"}}
                       ]
                     }}
                     """
@@ -608,11 +606,11 @@ elif menu == "🏋️‍♂️ Entrenador IA":
                         res = client.models.generate_content(model=MODELO_IA, contents=prompt_entreno)
                         texto = res.text.replace("```json", "").replace("```", "").strip()
                         st.session_state.rutina_estructurada = json.loads(texto)
-                        st.success("¡Sesión generada y adaptada a tu fisiología de hoy!")
+                        st.success("¡Sesión generada con telemetría avanzada (RIR/TUT)!")
                     except Exception as e:
                         st.error("Error al generar la rutina. La IA devolvió un formato incorrecto.")
 
-        # --- MOSTRAR LA RUTINA ---
+        # --- MOSTRAR LA RUTINA (CUADRO DE MANDOS AVANZADO) ---
         if st.session_state.rutina_estructurada:
             st.info(f"🧠 **Diagnóstico de tu Coach:** {st.session_state.rutina_estructurada.get('diagnostico', '')}")
             
@@ -620,45 +618,37 @@ elif menu == "🏋️‍♂️ Entrenador IA":
                 id_ej = f"ej_{i}"
                 with st.container(border=True):
                     st.subheader(f"🎯 {ej['nombre']}")
+                    
+                    # Mostrar las variables de programación arriba
+                    st.write(f"**Series:** {ej['series']} | **Reps:** {ej['reps']} | **Descanso:** {ej['descanso']}")
+                    st.markdown(f"⏱️ **TUT (Tempo):** `{ej.get('tut', 'Controlado')}` | 🎯 **RIR Objetivo:** `{ej.get('rir', '1-2')}`")
+                    st.markdown(f"📺 [Ver Técnica en Vídeo]({ej['video']})")
+                    
+                    st.divider()
+                    
                     c_e1, c_e2, c_e3 = st.columns([1,1,1])
                     
                     with c_e1: 
-                        st.write(f"**Series:** {ej['series']} | **Reps:** {ej['reps']} | **Descanso:** {ej['descanso']}")
-                        st.markdown(f"📺 [Ver Técnica en Vídeo]({ej['video']})")
+                        carga = st.number_input("Peso (kg)", 0.0, 300.0, step=2.5, key=f"w_{id_ej}")
                     
                     with c_e2:
-                        carga = st.number_input("Peso levantado (kg)", 0.0, 300.0, step=2.5, key=f"w_{id_ej}")
-                        rpe = st.slider("Esfuerzo RPE (1=Paseo, 10=Fallo)", 1, 10, 8, key=f"r_{id_ej}")
+                        # Cambiamos el viejo RPE por el RIR Real
+                        rir_real = st.slider("RIR Real logrado", 0, 5, int(ej.get('rir', '2')[0]) if ej.get('rir', '2')[0].isdigit() else 2, help="0 = Llegaste al fallo. 3 = Podías hacer 3 más.", key=f"rir_{id_ej}")
                     
                     with c_e3:
                         if st.button("🔄 MÁQUINA OCUPADA", key=f"occ_{id_ej}", use_container_width=True):
                             with st.spinner("Buscando alternativa..."):
-                                res_alt = client.models.generate_content(model=MODELO_IA, contents=f"Dame 1 sustituto directo para {ej['nombre']} usando material de {st.session_state.perfil['lugar_entreno']}. Solo di el nombre del ejercicio.")
+                                res_alt = client.models.generate_content(model=MODELO_IA, contents=f"Dame 1 sustituto directo para {ej['nombre']} usando material de {st.session_state.perfil['lugar_entreno']}. Solo di el nombre.")
                                 st.warning(f"Alternativa IA: {res_alt.text}")
                         
-                        if st.button("✅ REGISTRAR Y FATIGAR MÚSCULO", key=f"reg_{id_ej}", type="primary", use_container_width=True):
-                            st.session_state.historial_cargas[ej['nombre']] = {"peso": carga, "rpe": rpe}
+                        if st.button("✅ REGISTRAR SERIE", key=f"reg_{id_ej}", type="primary", use_container_width=True):
+                            st.session_state.historial_cargas[ej['nombre']] = {"peso": carga, "rir": rir_real}
                             st.session_state.racha_entreno += 1
-                            # Simulamos fatiga bajando un 10% un músculo al azar para el MVP (En producción se mapearía exacto)
+                            # Castigo muscular al SNC
                             st.session_state.mapa_muscular["SNC"] = max(0, st.session_state.mapa_muscular["SNC"] - 5)
-                            st.success("¡Guardado en el historial!")
+                            st.success(f"¡Carga guardada! RIR anotado: {rir_real}")
+                            time.sleep(1)
                             st.rerun()
-
-    with t_coach:
-        st.subheader("📹 Coach Técnico Biomecánico")
-        st.write("Sube un vídeo corto de tu levantamiento y la IA analizará tu postura, tempo y fallos técnicos.")
-        video_file = st.file_uploader("Sube tu vídeo (mp4, mov)", type=["mp4", "mov"])
-        if video_file and IA_ACTIVA:
-            if st.button("🔍 Analizar Biomecánica"):
-                with st.spinner("La IA está procesando los fotogramas y tu postura..."):
-                    # Gemini 2.5 Pro procesa vídeo nativo.
-                    res_vid = client.models.generate_content(
-                        model=MODELO_IA,
-                        contents=["Eres un experto en biomecánica. Analiza este levantamiento. Dime 3 puntos fuertes y 3 correcciones urgentes para evitar lesiones y maximizar la hipertrofia.", video_file]
-                    )
-                    st.success("Análisis completado:")
-                    st.markdown(res_vid.text)
-
 # ==========================================
 # 🍷 PANTALLA: VIDA SOCIAL (Supervivencia)
 # ==========================================
@@ -768,4 +758,4 @@ elif menu == "🩸 Progreso":
                         contents=[f"Evalúa esta foto de progreso fitness de una persona que busca {st.session_state.perfil['objetivo']}. Comenta amablemente sobre su desarrollo muscular visible y su postura.", Image.open(f_espejo)]
                     )
                     st.success("Evaluación de tu Coach:")
-                    st.write(res_espejo.text)                                                       
+                    st.write(res_espejo.text)                                                        
