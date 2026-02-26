@@ -337,56 +337,166 @@ elif menu == "👤 Perfil":
 # ==========================================
 # 🥗 PANTALLA: NUTRICIÓN PRO
 # ==========================================
+# ==========================================
+# 🥗 PANTALLA: NUTRICIÓN PRO (El Arsenal del Chef)
+# ==========================================
 elif menu == "🥗 Nutrición Pro":
-    st.header("🥗 Central Nutricional Adaptativa")
+    st.header("🥗 Central Nutricional y Chef IA")
     
-    with st.expander("🛒 Tu Arsenal (Despensa y Escáner)", expanded=True):
-        t_nev, t_ticket, t_voz, t_man = st.tabs(["📸 Escáner Nevera", "🧾 Ticket", "🎙️ Dictado IA", "⌨️ Manual"])
+    # --- 1. LÓGICA DE DESPENSA VACÍA (LISTA DE COMPRA INICIAL) ---
+    if not st.session_state.despensa:
+        st.warning("🚨 Tu despensa está vacía. Para empezar con el pie derecho, necesitas un arsenal básico.")
+        if st.button("🛒 GENERAR MI LISTA DE COMPRA INICIAL (BIO-HACKED)", type="primary", use_container_width=True):
+            if IA_ACTIVA:
+                with st.spinner("El Chef está analizando tu biometría para tu primera compra..."):
+                    p = st.session_state.perfil
+                    prompt_compra = f"""
+                    Eres un experto en nutrición y logística. Genera una lista de compra inicial para un {p['sexo']} de {p['peso']}kg con objetivo {p['objetivo']}.
+                    REGLAS:
+                    - Incluye fuentes de grasas insaturadas (aguacate, AOVE, nueces).
+                    - Incluye hidratos complejos para el glucógeno.
+                    - Ten en cuenta su presupuesto {p['presupuesto']} y dieta {p['dieta_tipo']}.
+                    - Formato: Devuelve una lista categorizada (Proteínas, Grasas, Hidratos, Vegetales).
+                    """
+                    res = client.models.generate_content(model=MODELO_IA, contents=prompt_compra)
+                    st.session_state.lista_compra_sugerida = res.text
+        
+        if 'lista_compra_sugerida' in st.session_state:
+            with st.container(border=True):
+                st.markdown("### 📋 Tu Lista de Compra Estratégica")
+                st.write(st.session_state.lista_compra_sugerida)
+                if st.button("✅ Ya he comprado todo (Llenar despensa automáticamente)"):
+                    # Extraemos los nombres de alimentos de la lista sugerida (simulado)
+                    st.session_state.despensa = ["huevos", "pollo", "arroz", "aguacate", "avena", "nueces", "espinacas", "aceite de oliva"]
+                    st.success("¡Despensa cargada con los básicos! Ahora ya podemos cocinar.")
+                    st.rerun()
+        st.divider()
+
+    # --- 2. GESTIÓN DE DESPENSA (LOS 5 ESCÁNERES) ---
+    with st.expander("🛒 Gestionar mi Despensa e Ingredientes", expanded=not bool(st.session_state.despensa)):
+        t_nev, t_ticket, t_barras, t_voz, t_man = st.tabs([
+            "📸 Nevera/Despensa", "🧾 Ticket", "🔍 Código de Barras", "🎙️ Dictado", "⌨️ Manual"
+        ])
         
         with t_nev:
-            foto_nev = st.camera_input("Enfoca alimentos")
-            if foto_nev and IA_ACTIVA:
-                res = client.models.generate_content(model=MODELO_IA, contents=["Lista alimentos saludables separados por comas.", Image.open(foto_nev)])
-                st.session_state.despensa = list(set(st.session_state.despensa + [i.strip().lower() for i in res.text.split(",") if i.strip()]))
-                    
+            col_n1, col_n2 = st.columns(2)
+            with col_n1: foto_n = st.camera_input("Hacer foto a la nevera")
+            with col_n2: archivo_n = st.file_uploader("O subir foto desde archivo", type=['jpg', 'png', 'jpeg'], key="up_nev")
+            if (foto_n or archivo_n) and IA_ACTIVA:
+                img = Image.open(foto_n if foto_n else archivo_n)
+                with st.spinner("Chef IA escaneando..."):
+                    res = client.models.generate_content(model=MODELO_IA, contents=["Lista alimentos saludables separados por comas.", img])
+                    nuevos = [i.strip().lower() for i in res.text.split(",") if i.strip()]
+                    st.session_state.despensa = list(set(st.session_state.despensa + nuevos))
+                    st.success(f"Detectados: {', '.join(nuevos)}")
+
         with t_ticket:
-            foto_ticket = st.file_uploader("Subir Ticket", type=['jpg', 'png'])
-            if foto_ticket and IA_ACTIVA:
-                res_ticket = client.models.generate_content(model=MODELO_IA, contents=["Extrae alimentos saludables del ticket.", Image.open(foto_ticket)])
-                st.session_state.despensa = list(set(st.session_state.despensa + [i.strip().lower() for i in res_ticket.text.split(",") if i.strip()]))
-                    
+            archivo_t = st.file_uploader("Sube foto del ticket", type=['jpg', 'png', 'jpeg'], key="up_tick")
+            if archivo_t and IA_ACTIVA:
+                res = client.models.generate_content(model=MODELO_IA, contents=["Extrae nombres de alimentos saludables del ticket.", Image.open(archivo_t)])
+                nuevos = [i.strip().lower() for i in res.text.split(",") if i.strip()]
+                st.session_state.despensa = list(set(st.session_state.despensa + nuevos))
+
+        with t_barras:
+            archivo_b = st.file_uploader("Foto Código de Barras", type=['jpg', 'png', 'jpeg'], key="up_bar")
+            if archivo_b and IA_ACTIVA:
+                res = client.models.generate_content(model=MODELO_IA, contents=["¿Qué alimento es este código de barras?", Image.open(archivo_b)])
+                st.session_state.despensa.append(res.text.strip().lower())
+
         with t_voz:
-            audio_despensa = st.audio_input("Dictar:")
-            if audio_despensa and IA_ACTIVA:
-                res_audio = client.models.generate_content(model=MODELO_IA, contents=["Extrae nombres de alimentos.", audio_despensa])
-                st.session_state.despensa = list(set(st.session_state.despensa + [i.strip().lower() for i in res_audio.text.split(",") if i.strip()]))
+            audio = st.audio_input("Dicta tus ingredientes:")
+            if audio and IA_ACTIVA:
+                res = client.models.generate_content(model=MODELO_IA, contents=["Extrae alimentos de este audio.", audio])
+                st.session_state.despensa = list(set(st.session_state.despensa + [i.strip().lower() for i in res.text.split(",") if i.strip()]))
                 st.rerun()
-                    
+
         with t_man:
-            manual = st.text_input("Añadir manual:")
-            if st.button("Añadir"):
+            manual = st.text_input("Añadir manual (ej: atún, pasta):")
+            if st.button("➕ Añadir"):
                 st.session_state.despensa = list(set(st.session_state.despensa + [i.strip().lower() for i in manual.split(",") if i.strip()]))
+                st.rerun()
 
-        st.write(f"🥑 **Despensa:** {', '.join(st.session_state.despensa).title()}")
+        st.divider()
+        if st.session_state.despensa:
+            st.write(f"🍏 **Tu Despensa:** {', '.join(st.session_state.despensa).title()}")
+            if st.button("🗑️ VACIAR DESPENSA A 0", type="secondary"):
+                st.session_state.despensa = []
+                st.session_state.pop('lista_compra_sugerida', None)
+                st.rerun()
 
-    if st.button("🚀 GENERAR PLAN SEMANAL", type="primary", use_container_width=True):
+    # --- 3. EL CHEF IA (RECETAS Y CIENCIA) ---
+    if st.button("👨‍🍳 GENERAR PLAN SEMANAL Y RECETAS (GOD-TIER)", type="primary", use_container_width=True):
         if IA_ACTIVA:
-            with st.spinner("IA calculando..."):
+            with st.spinner("El Chef está diseñando tu semana..."):
                 p = st.session_state.perfil
-                prompt = f"Dieta semanal JSON. Obj: {p['objetivo']}. Reglas: Grasas min 1g/kg. Post-entreno CH alto. Fase: {p['perfil_hormonal']}. Despensa: {st.session_state.despensa}."
+                prompt = f"""
+                Eres un Chef Michelin y Nutricionista. Genera dieta semanal.
+                REGLAS: Grasas min 1g/kg. Post-entreno ({p['horario_entreno']}) alto en CH. 
+                Fase Hormonal: {p['perfil_hormonal']}. Despensa: {st.session_state.despensa}.
+                Devuelve JSON con: "plato", "ingredientes", "instrucciones", "nota_ciencia".
+                """
                 try:
                     res = client.models.generate_content(model=MODELO_IA, contents=prompt)
                     texto = res.text.replace("```json", "").replace("```", "").strip()
                     st.session_state.plan_estructurado = json.loads(texto)
-                    st.success("¡Dieta lista!")
-                except: st.error("Error IA.")
+                except: st.error("Error en la cocina. Reintenta.")
 
+   # --- 4. VISUALIZACIÓN, DETECTOR DE FALTANTES Y CIENCIA ---
     if st.session_state.plan_estructurado:
-        dia = st.selectbox("Día:", list(st.session_state.plan_estructurado.keys()))
-        for c in st.session_state.plan_estructurado.get(dia, []):
-            with st.container(border=True):
-                st.write(f"### {c.get('tipo')}: {c.get('plato')}")
-                st.info(f"🧬 {c.get('nota_ciencia', 'Bio-Hack activo.')}")   
+        dia_sel = st.selectbox("📅 Selecciona Día:", list(st.session_state.plan_estructurado.keys()))
+        
+        st.subheader(f"Plan para el {dia_sel}")
+        
+        # --- NUEVO: ESCÁNER DE FALTANTES CRÍTICOS DEL DÍA ---
+        ingredientes_dia = []
+        for c in st.session_state.plan_estructurado.get(dia_sel, []):
+            ingredientes_dia.extend([i.lower() for i in c.get('ingredientes', [])])
+        
+        faltantes = [i for i in ingredientes_dia if not any(d in i or i in d for d in st.session_state.despensa)]
+        
+        if faltantes:
+            with st.status("⚠️ Alerta de Suministros: Faltan ingredientes para hoy", state="error"):
+                st.write("Para cumplir el plan de hoy al 100%, necesitas comprar:")
+                for f in set(faltantes):
+                    st.write(f"❌ {f.title()}")
+                if st.button("🛒 Añadir faltantes a mi Lista de Compra"):
+                    st.toast("Añadido a tu lista de recordatorios")
+        else:
+            st.success("✅ ¡Tienes todo en la despensa para cumplir el plan de hoy!")
+
+        # --- DETALLE DE LAS COMIDAS ---
+        for i, c in enumerate(st.session_state.plan_estructurado.get(dia_sel, [])):
+            with st.expander(f"🍽️ {c['tipo']}: {c['plato']}", expanded=True):
+                st.info(f"🧬 **Bio-Hack:** {c.get('nota_ciencia')}")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write("**🛒 Ingredientes:**")
+                    for ing in c.get('ingredientes', []):
+                        # Marcamos visualmente si lo tenemos o no
+                        tienes = any(d in ing.lower() or ing.lower() in d for d in st.session_state.despensa)
+                        st.write(f"{'✅' if tienes else '❌'} {ing}")
+                
+                with col2:
+                    st.write("**👨‍🍳 Instrucciones del Chef:**")
+                    st.write(c.get('instrucciones', 'Paso a paso no disponible.'))
+                
+                # BOTÓN DE CONSUMO (Resta de la despensa)
+                if st.button(f"✅ Marcar {c['tipo']} como ingerido", key=f"check_{dia_sel}_{i}"):
+                    # Lógica de resta automática
+                    for ing in c.get('ingredientes', []):
+                        for item in st.session_state.despensa:
+                            if item in ing.lower() or ing.lower() in item:
+                                try:
+                                    st.session_state.despensa.remove(item)
+                                    break 
+                                except ValueError: pass
+                    
+                    st.session_state.racha_nutricion += 10
+                    st.balloons()
+                    st.success(f"¡{c['tipo']} registrado! Ingredientes restados de la despensa.")
+                    time.sleep(1)
+                    st.rerun()
 # ==========================================
 # 🏋️‍♂️ PANTALLA: ENTRENADOR IA (Biomecánica y Fatiga)
 # ==========================================
@@ -605,4 +715,4 @@ elif menu == "🩸 Progreso":
                         contents=[f"Evalúa esta foto de progreso fitness de una persona que busca {st.session_state.perfil['objetivo']}. Comenta amablemente sobre su desarrollo muscular visible y su postura.", Image.open(f_espejo)]
                     )
                     st.success("Evaluación de tu Coach:")
-                    st.write(res_espejo.text)                                                             
+                    st.write(res_espejo.text)                                                                
