@@ -250,7 +250,7 @@ elif menu == "👤 Perfil":
     st.write("Rellena tus datos. La IA cruzará tu biometría, hormonas y logística para crear tu plan perfecto.")
     
 # --- 1. BIOMETRÍA Y SALUD FEMENINA ---
-    with st.expander("1. Biometría y Salud Femenina", expanded=True):
+    with st.expander("1. Biometría y Salud", expanded=True):
         # Usamos columnas con un ratio 1:1 para asegurar el espacio
         c1, c2 = st.columns([1, 1])
         
