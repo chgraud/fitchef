@@ -51,42 +51,22 @@ except Exception as e:
 # ==========================================
 # Aquí definimos la estructura del usuario para que NUNCA se borre al recargar
 
+# --- BUSCA ESTO AL PRINCIPIO DE TU CÓDIGO ---
 if 'perfil' not in st.session_state:
     st.session_state.perfil = {
-        # --- 1. BÁSICOS Y BIOMETRÍA ---
-        "nombre": "", 
-        "sexo": "Hombre", 
-        "edad": 25, 
-        "peso": 70.0, 
-        "altura": 170,
-        "actividad": "Moderada", # Importante para el cálculo de kcal
-        
-        # --- 2. OBJETIVOS Y ENTRENAMIENTO ---
-        "objetivo": "Ganar Músculo", 
-        "experiencia": "Intermedio",
-        "lugar_entreno": "Gimnasio Comercial", # Casa / Parque / Gym
-        "horario_entreno": "Tarde",
-        "dias_entreno": 4,
-        
-        # --- 3. NUTRICIÓN E IDENTIDAD ---
-        "dieta_base": "Omnívoro",
-        "restricciones": "Ninguna", # Alergias, intolerancias y odios
-        "suplementos_disponibles": "", # Tu armario de suplementos
-        "presupuesto": "Moderado", # Para que no te pida bogavante cada día
-        
-        # --- 4. LOGÍSTICA Y ESTILO DE VIDA ---
-        "estilo_cocina": "Rápido (15-20 min)",
-        "realidad_diaria": "Comer en casa",
-        "utensilios": ["Sartén", "Microondas"], # Tu equipamiento real
-        "sueno_base": "Normal (6-8h)",
-        "estres_base": "Moderado",
-        
-        # --- 5. CAPA BIO-HACKER (CLÍNICA) ---
-        "bio_hacker_mode": False,
-        "protocolo_metabolico": "Balanceado",
-        "salud_intestinal": [],
-        "semana_mesociclo": 1,
-        "perfil_hormonal": "Ninguno"
+        "nombre": "", "sexo": "Hombre", "edad": 25, "peso": 70.0, "altura": 170, "actividad": "Moderada",
+        "hora_despertar": datetime.time(7, 0), "hora_dormir": datetime.time(23, 0),
+        "digestion": "Normal", "cafeina": "Normal", "lesiones_historial": "",
+        "objetivo": "Estética Funcional", "experiencia": "Intermedio",
+        "lugar_entreno": "Gimnasio Comercial", "horario_entreno": "Tarde", "dias_entreno": 4,
+        "estres_base": "Moderado", "sueno_base": "Normal (6-8h)",
+        "dieta_base": "Omnívora", "n_comidas": 4, "ayuno": False,
+        "presupuesto": "Moderado", "estilo_cocina": "Rápido (15-20 min)",
+        "utensilios": ["Sartén", "Microondas"], "suplementos": "", 
+        "restricciones": "",  # <--- ¡ESTA ES LA QUE TE FALTA!
+        "gustos_positivos": "", "gustos_negativos": "", "alergias": "",
+        "bio_hacker_mode": False, "protocolo_metabolico": "Balanceado",
+        "salud_intestinal": [], "semana_mesociclo": 1, "perfil_hormonal": "Ninguno"
     }
 
 # B) Arrays y Contadores de Nutrición y Progreso
