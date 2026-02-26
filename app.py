@@ -441,80 +441,93 @@ elif menu == "🥗 Nutrición Pro":
                     st.session_state.plan_estructurado = json.loads(texto)
                 except: st.error("Error en la cocina. Reintenta.")
 
-  # --- 4. VISUALIZACIÓN, MACROS Y AUDITORÍA DE DESVÍOS ---
-    if st.session_state.plan_structured:
-        dia_sel = st.selectbox("📅 Selecciona Día:", list(st.session_state.plan_structured.keys()))
+  # --- 4. VISUALIZACIÓN, MACROS, FALTANTES Y AUDITORÍA DE DESVÍOS ---
+    if st.session_state.plan_estructurado: # <--- Corregido de 'structured' a 'estructurado'
+        dia_sel = st.selectbox("📅 Selecciona Día:", list(st.session_state.plan_estructurado.keys()))
         
-        # --- RESUMEN DE MACROS DEL DÍA ---
+        # A) RESUMEN DE MACROS DEL DÍA
         macros_dia = {"kcal": 0, "prot": 0, "cho": 0, "fat": 0}
-        for c in st.session_state.plan_structured.get(dia_sel, []):
+        for c in st.session_state.plan_estructurado.get(dia_sel, []):
             macros_dia["kcal"] += c.get("kcal", 0)
             macros_dia["prot"] += c.get("prot", 0)
             macros_dia["cho"] += c.get("cho", 0)
             macros_dia["fat"] += c.get("fat", 0)
             
-        cols_m = st.columns(4)
-        cols_m[0].metric("🔥 Kcal Totales", f"{macros_dia['kcal']} kcal")
-        cols_m[1].metric("🥩 Proteína", f"{macros_dia['prot']}g")
-        cols_m[2].metric("🍞 Hidratos", f"{macros_dia['cho']}g")
-        cols_m[3].metric("🥑 Grasas", f"{macros_dia['fat']}g")
+        st.subheader(f"📊 Resumen Nutricional: {dia_sel}")
+        m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+        m_col1.metric("🔥 Kcal", f"{macros_dia['kcal']}")
+        m_col2.metric("🥩 Prot", f"{macros_dia['prot']}g")
+        m_col3.metric("🍞 Hidratos", f"{macros_dia['cho']}g")
+        m_col4.metric("🥑 Grasas", f"{macros_dia['fat']}g")
+
+        # B) ESCÁNER DE FALTANTES CRÍTICOS
+        ingredientes_dia = []
+        for c in st.session_state.plan_estructurado.get(dia_sel, []):
+            ingredientes_dia.extend([i.lower() for i in c.get('ingredientes', [])])
+        
+        faltantes = [i for i in ingredientes_dia if not any(d in i or i in d for d in st.session_state.despensa)]
+        
+        if faltantes:
+            with st.status("⚠️ Alerta de Suministros: Faltan ingredientes para hoy", state="error"):
+                st.write("Para cumplir el plan al 100%, necesitas comprar:")
+                for f in set(faltantes): st.write(f"❌ {f.title()}")
+        else:
+            st.success("✅ Tienes todo para cumplir el plan de hoy.")
 
         st.divider()
 
-        # --- DETALLE DE LAS COMIDAS CON OPCIÓN "HE COMIDO OTRA COSA" ---
-        for i, c in enumerate(st.session_state.plan_structured.get(dia_sel, [])):
-            with st.expander(f"🍽️ {c['tipo']}: {c['plato']} ({c['kcal']} kcal)", expanded=True):
-                st.info(f"🧬 **Bio-Hack:** {c.get('nota_ciencia')}")
+        # C) DETALLE DE LAS COMIDAS CON AUDITORÍA
+        for i, c in enumerate(st.session_state.plan_estructurado.get(dia_sel, [])):
+            with st.expander(f"🍽️ {c['tipo']}: {c['plato']} ({c.get('kcal', 0)} kcal)", expanded=True):
+                st.info(f"🧬 **Bio-Hack:** {c.get('nota_ciencia', 'Optimización metabólica activa.')}")
                 
                 col1, col2 = st.columns(2)
                 with col1:
                     st.write("**🛒 Ingredientes:**")
-                    for ing in c.get('ingredients', []):
+                    for ing in c.get('ingredientes', []): # <--- Corregido de 'ingredients' a 'ingredientes'
                         tienes = any(d in ing.lower() or ing.lower() in d for d in st.session_state.despensa)
                         st.write(f"{'✅' if tienes else '❌'} {ing}")
                 with col2:
                     st.write("**👨‍🍳 Instrucciones:**")
-                    st.write(c.get('instructions', 'Paso a paso no disponible.'))
+                    st.write(c.get('instrucciones', 'Cocinar a fuego lento y disfrutar.')) # <--- Corregido de 'instructions'
                 
-                # --- BOTONERA DE ACCIÓN ---
+                # BOTONERA DE ACCIÓN DOBLE
                 c_act1, c_act2 = st.columns(2)
                 
                 with c_act1:
-                    if st.button(f"✅ Hecho (Restar Despensa)", key=f"ok_{dia_sel}_{i}"):
-                        # Resta automática de ingredientes del plan
-                        for ing in c.get('ingredients', []):
+                    if st.button(f"✅ Hecho (Restar Plan)", key=f"ok_{dia_sel}_{i}"):
+                        for ing in c.get('ingredientes', []):
                             for item in st.session_state.despensa:
                                 if item in ing.lower() or ing.lower() in item:
                                     try: st.session_state.despensa.remove(item); break
                                     except: pass
                         st.session_state.racha_nutricion += 10
-                        st.success("¡Plan cumplido! Despensa actualizada.")
-                        time.sleep(1); st.rerun()
+                        st.balloons()
+                        st.rerun()
 
                 with c_act2:
-                    # OPCIÓN REBELDE: He comido algo diferente
                     if st.button(f"📸 He comido otra cosa", key=f"fail_{dia_sel}_{i}"):
                         st.session_state[f"rebelde_{i}"] = True
 
+                # ZONA DE AUDITORÍA REBELDE
                 if st.session_state.get(f"rebelde_{i}", False):
                     with st.container(border=True):
-                        st.write("🕵️‍♂️ **Auditoría de Desvío:** Sube foto o describe qué has comido.")
+                        st.write("🕵️‍♂️ **Auditoría IA:** Sube foto de lo que has comido realmente.")
                         foto_rebelde = st.file_uploader("Captura del plato real", type=['jpg', 'png'], key=f"foto_reb_{i}")
                         if foto_rebelde and IA_ACTIVA:
-                            with st.spinner("Analizando tu desvío y ajustando inventario..."):
+                            with st.spinner("Analizando plato improvisado..."):
                                 res = client.models.generate_content(
                                     model=MODELO_IA,
-                                    contents=["Analiza este plato. Dime qué ingredientes lleva y cuáles de estos podrían estar en una despensa (pollo, arroz, etc.). Sepáralos por comas.", Image.open(foto_rebelde)]
+                                    contents=["Analiza este plato. Dime qué ingredientes lleva que suelan estar en una despensa. Sepáralos por comas.", Image.open(foto_rebelde)]
                                 )
-                                ingredientes_extraidos = [x.strip().lower() for x in res.text.split(",") if x.strip()]
-                                # Restamos los ingredientes detectados de la foto
-                                for ing_f in ingredientes_extraidos:
+                                ingredientes_f = [x.strip().lower() for x in res.text.split(",") if x.strip()]
+                                for ing_f in ingredientes_f:
                                     for item in st.session_state.despensa:
                                         if item in ing_f or ing_f in item:
                                             try: st.session_state.despensa.remove(item); break
                                             except: pass
-                                st.warning(f"Detectado en el plato: {', '.join(ingredientes_extraidos)}. Despensa actualizada.")
-                                if st.button("Cerrar Auditoría"):
+                                st.warning(f"Detectado y restado de despensa: {', '.join(ingredientes_f)}")
+                                if st.button("Cerrar Auditoría", key=f"close_{i}"):
                                     st.session_state[f"rebelde_{i}"] = False
                                     st.rerun()
 # ==========================================
@@ -735,4 +748,4 @@ elif menu == "🩸 Progreso":
                         contents=[f"Evalúa esta foto de progreso fitness de una persona que busca {st.session_state.perfil['objetivo']}. Comenta amablemente sobre su desarrollo muscular visible y su postura.", Image.open(f_espejo)]
                     )
                     st.success("Evaluación de tu Coach:")
-                    st.write(res_espejo.text)                                                               
+                    st.write(res_espejo.text)                                                        
