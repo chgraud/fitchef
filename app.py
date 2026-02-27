@@ -53,33 +53,26 @@ except Exception as e:
 
 # --- BUSCA ESTO AL PRINCIPIO DE TU CÓDIGO ---
 # --- COPIA ESTO AL PRINCIPIO (Borra el anterior de perfil) ---
+# --- BUSCA ESTE BLOQUE AL PRINCIPIO DE TU APP.PY ---
 if 'perfil' not in st.session_state:
     st.session_state.perfil = {
-        # Identidad y Biometría
         "nombre": "", "sexo": "Hombre", "edad": 25, "peso": 70.0, "altura": 170, "actividad": "Moderada",
         "objetivo": "Estética Funcional", "experiencia": "Intermedio",
-        
-        # Cronobiología y Clínica
-        "hora_despertar": datetime.time(7, 0), "hora_dormir": datetime.time(23, 0),
-        "digestion": "Normal", "cafeina": "Normal", "lesiones_historial": "",
-        
-        # Logística y Entrenamiento
         "lugar_entreno": "Gimnasio Comercial", "horario_entreno": "Tarde", "dias_entreno": 4,
         "estres_base": "Moderado", "sueno_base": "Normal (6-8h)",
-        
-        # Nutrición y Logística (AQUÍ ESTABAN LOS ERRORES)
+        "hora_despertar": datetime.time(7, 0), "hora_dormir": datetime.time(23, 0),
+        "digestion": "Normal", "cafeina": "Normal", "lesiones_historial": "",
         "dieta_base": "Omnívora", "n_comidas": 4, "ayuno": False,
         "presupuesto": "Moderado", "estilo_cocina": "Rápido (15-20 min)",
         "utensilios": ["Sartén", "Microondas"], 
-        "suplementos": "",           # <--- Nombre unificado
-        "restricciones": "",          # <--- Nombre unificado
-        
-        # Memoria Gastronómica
+        "suplementos": "", "restricciones": "",
         "gustos_positivos": "", "gustos_negativos": "",
-        
-        # Modo Bio-Hacker
-        "bio_hacker_mode": False, "protocolo_metabolico": "Balanceado",
-        "salud_intestinal": [], "semana_mesociclo": 1, "perfil_hormonal": "Ninguno"
+        "bio_hacker_mode": False, 
+        "protocolo_metabolico": "Balanceado",
+        "salud_intestinal": [], 
+        "patologias": ["Ninguna"], 
+        "semana_mesociclo": 1, 
+        "perfil_hormonal": "Ninguno"
     }
 
 # B) Arrays y Contadores de Nutrición y Progreso
@@ -401,16 +394,28 @@ elif menu == "👤 Perfil":
     # --- AQUÍ VA EL NUEVO DASHBOARD MÉDICO QUE TE PASÉ ---
     if p['bio_hacker_mode']:
         with st.container(border=True):
-            st.markdown("### 🧪 LABORATORIO DE BIO-HACKING")
+            st.markdown("### 🧪 LABORATORIO DE BIO-HACKING & CLÍNICA")
             
-            # Resumen de lo que la IA leyó en la pestaña Clínica
-            with st.status("🧬 Diagnóstico de Biomarcadores Activo", expanded=False):
+            # --- NUEVO: SECTOR DE PATOLOGÍAS CRÓNICAS ---
+            st.error("⚠️ SECCIÓN DE SEGURIDAD MÉDICA")
+            p['patologias'] = st.multiselect(
+                "Selecciona si tienes alguna condición crónica:",
+                ["Ninguna", "Hipertensión Arterial", "Diabetes Tipo 1", "Diabetes Tipo 2", 
+                 "Hipotiroidismo", "SOP (Ovario Poliquístico)", "Resistencia a la Insulina",
+                 "Colesterol Alto (Dislipemia)", "Ácido Úrico (Gota)", "Hígado Graso", "Osteoporosis"],
+                default=p.get('patologias', ["Ninguna"])
+            )
+            
+            st.caption("Nota: La IA adaptará automáticamente los ingredientes y la intensidad del ejercicio.")
+            
+            # --- RESUMEN DE ANALÍTICAS ---
+            with st.status("🧬 Biomarcadores Detectados", expanded=False):
                 st.write(f"**Analíticas:** {st.session_state.historial_medico.get('analiticas', 'Pendiente')}")
                 st.write(f"**Lesiones:** {st.session_state.historial_medico.get('lesiones', 'Sin lesiones')}")
 
             st.write("---")
 
-            # Cronobiología Real
+            # --- CRONOBIOLOGÍA ---
             c_cron1, c_cron2, c_cron3 = st.columns(3)
             with c_cron1:
                 p['hora_despertar'] = st.time_input("☀️ Despertar", p.get('hora_despertar', datetime.time(7,0)))
@@ -421,7 +426,7 @@ elif menu == "👤 Perfil":
 
             st.write("---")
 
-            # Protocolos Clínicos
+            # --- PROTOCOLOS Y FILTROS ---
             col_p1, col_p2 = st.columns(2)
             with col_p1:
                 p['protocolo_metabolico'] = st.selectbox("🔬 Protocolo Metabólico", 
@@ -430,25 +435,26 @@ elif menu == "👤 Perfil":
                 p['salud_intestinal'] = st.multiselect("🦠 Filtros Microbiota", 
                     ["Sin Histamina", "Sin Solanáceas", "Sin Gluten", "Sin Lácteos"])
 
-            # Periodización Visual con Métricas
+            # --- PERIODIZACIÓN DINÁMICA ---
             st.write("---")
-            st.subheader("📅 Estado del Mesociclo / Ciclo")
-            semana = st.slider("Semana actual (1 a 4)", 1, 4, p.get('semana_mesociclo', 1))
+            st.subheader("📅 Estado del Mesociclo")
+            semana = st.slider("Semana actual", 1, 4, p.get('semana_mesociclo', 1))
             p['semana_mesociclo'] = semana
 
             m1, m2, m3 = st.columns(3)
+            # (Aquí mantenemos las métricas que pusimos en el mensaje anterior...)
             if p['sexo'] == "Mujer":
                 fases = {1: ("Menstrual", "🩸"), 2: ("Folicular", "🟢"), 3: ("Ovulatoria", "🟡"), 4: ("Lútea", "🟠")}
                 fase, icono = fases[semana]
                 m1.metric("Fase Hormonal", fase, icono)
-                m2.metric("Enfoque Dieta", "Antiinflamatoria" if semana == 1 else "Carga Glucógeno")
-                m3.metric("Intensidad Sugerida", "Baja" if semana == 1 else "Máxima")
             else:
                 fases_h = {1: ("Adaptación", "🌱"), 2: ("Sobrecarga", "📈"), 3: ("Pico", "🔥"), 4: ("Descarga", "🔋")}
                 fase, icono = fases_h[semana]
                 m1.metric("Estado Ciclo", fase, icono)
-                m2.metric("Volumen", "Moderado" if semana == 1 else "Máximo")
-                m3.metric("Riesgo Lesión", "Bajo" if semana == 4 else "Moderado")
+            
+            # --- DISCLAIMER LEGAL ---
+            st.divider()
+            st.caption("⚖️ **Aviso Legal:** Los planes generados son sugerencias basadas en IA. Si padeces enfermedades crónicas, consulta siempre con tu médico antes de iniciar el programa.")
 
     # Botón Final
     if st.button("💾 SINCRONIZAR ADN HUMAN OS", type="primary", use_container_width=True):
