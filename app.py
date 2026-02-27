@@ -348,102 +348,111 @@ if menu == "🏠 Inicio":
 # 👤 PANTALLA: PERFIL GOD-TIER
 # ==========================================
 elif menu == "👤 Perfil":
-    st.header("👤 Perfil Biológico y Logístico")
+    st.header("👤 Centro de Mando: Human OS")
     p = st.session_state.perfil
 
-    # --- BLOQUE 1: BIOMETRÍA Y OBJETIVOS ---
-    with st.container(border=True):
-        st.subheader("🧬 Biometría y Objetivo")
-        col1, col2, col3 = st.columns(3)
-        with col1:
+    # --- 1. BIOMETRÍA Y OBJETIVOS (Capa 0) ---
+    with st.expander("1. Biometría y Objetivo", expanded=not p['bio_hacker_mode']):
+        c1, c2, c3 = st.columns(3)
+        with c1:
             p['sexo'] = st.selectbox("Sexo Biológico", ["Hombre", "Mujer"], index=0 if p['sexo']=="Hombre" else 1)
             p['edad'] = st.number_input("Edad", 14, 100, p['edad'])
-        with col2:
+        with c2:
             p['peso'] = st.number_input("Peso (kg)", 30.0, 250.0, float(p['peso']))
             p['altura'] = st.number_input("Altura (cm)", 100, 250, p['altura'])
-        with col3:
-            p['objetivo'] = st.selectbox("Objetivo Principal", ["Perder Grasa", "Ganar Músculo", "Rendimiento Atlético", "Longevidad"])
-            p['actividad'] = st.selectbox("Nivel de Actividad Diaria", ["Sedentario", "Moderada", "Activa", "Muy Activa"])
+        with c3:
+            p['objetivo'] = st.selectbox("Programa Principal", ["Estética Funcional", "Powerbuilding", "Longevidad", "Rendimiento Atlético"])
+            p['actividad'] = st.selectbox("Actividad Diaria", ["Sedentaria", "Ligera", "Moderada", "Muy Activa"])
 
-    # --- BLOQUE 2: ENTRENAMIENTO ---
-    with st.container(border=True):
-        st.subheader("🏋️‍♂️ Configuración de Entrenamiento")
-        col_e1, col_e2, col_e3 = st.columns(3)
+    # --- 2. ENTRENAMIENTO Y LOGÍSTICA ---
+    with st.expander("2. Entrenamiento y Logística"):
+        col_e1, col_e2 = st.columns(2)
         with col_e1:
-            p['experiencia'] = st.selectbox("Experiencia", ["Principiante", "Intermedio", "Avanzado"])
-            p['lugar_entreno'] = st.selectbox("Lugar", ["Gimnasio Comercial", "En Casa (Mínimo material)", "Calistenia / Parque"])
+            p['experiencia'] = st.select_slider("Tu Nivel", ["Principiante", "Intermedio", "Avanzado"], value=p['experiencia'])
+            p['lugar_entreno'] = st.selectbox("Lugar", ["Gimnasio Comercial", "Home Gym", "Parque/Calistenia"])
         with col_e2:
-            p['dias_entreno'] = st.slider("Días por semana", 1, 7, p.get('dias_entreno', 4))
-            p['horario_entreno'] = st.selectbox("Horario", ["Mañana", "Mediodía", "Tarde", "Noche"])
-        with col_e3:
-            p['estres_base'] = st.select_slider("Nivel de Estrés", options=["Bajo", "Moderado", "Alto", "Crítico"])
-            p['sueno_base'] = st.selectbox("Calidad de Sueño", ["Mala (<6h)", "Normal (6-8h)", "Reparadora (>8h)"])
+            p['dias_entreno'] = st.slider("Días/Semana", 1, 7, p['dias_entreno'])
+            p['estres_base'] = st.select_slider("Nivel de Estrés", ["Bajo", "Moderado", "Alto", "Crítico"])
 
-    # --- BLOQUE 3: LOGÍSTICA Y COCINA ---
-    with st.container(border=True):
-        st.subheader("🍳 Logística y Nutrición Base")
-        col_c1, col_c2 = st.columns(2)
-        with col_c1:
-            p['dieta_base'] = st.selectbox("Identidad Alimentaria", ["Omnívoro", "Flexitariano", "Pescetariano", "Vegetariano", "Vegano (WFPB)"])
-            p['estilo_cocina'] = st.selectbox("Tiempo para Cocinar", ["Rápido (15-20 min)", "Gourmet", "Batch-Cooking (Domingo)"])
-            p['presupuesto'] = st.selectbox("Presupuesto Semanal", ["Económico", "Moderado", "Premium"])
-        with col_c2:
-            p['utensilios'] = st.multiselect("Utensilios disponibles", 
-                ["Sartén", "Olla", "Horno", "Airfryer", "Thermomix", "Vaporera", "Microondas", "Batidora de vaso"],
-                default=p.get('utensilios', ["Sartén", "Microondas"]))
-            p['realidad_diaria'] = st.selectbox("Contexto de comidas", ["Como en casa", "Llevo Tupper", "Restaurante / Menú del día"])
+    # --- 3. NUTRICIÓN Y COCINA ---
+    with st.expander("3. Nutrición y Cocina"):
+        col_n1, col_n2 = st.columns(2)
+        with col_n1:
+            p['dieta_base'] = st.selectbox("Identidad Alimentaria", ["Omnívora", "Flexitariano", "Pescetariano", "Vegetariano", "Vegano"])
+            p['estilo_cocina'] = st.selectbox("Ritmo de Cocina", ["Rápido (15-20 min)", "Gourmet", "Batch-Cooking (Tuppers)"])
+        with col_n2:
+            p['presupuesto'] = st.select_slider("Presupuesto", ["Económico", "Moderado", "Premium"])
+            p['utensilios'] = st.multiselect("Utensilios disponibles", ["Sartén", "Horno", "Airfryer", "Vaporera", "Microondas", "Batidora"], default=p['utensilios'])
 
-    # --- BLOQUE 4: SEGURIDAD Y SUPLEMENTOS ---
-    # --- DENTRO DEL EXPANDER 4 (Nutrición y Arsenal) ---
-    with st.container(border=True):
-        st.subheader("💊 Seguridad y Arsenal")
-        # Cambiado de 'alergias' a 'restricciones'
-        p['restricciones'] = st.text_area("Alergias, intolerancias o alimentos que ODIAS", 
-                                         value=p.get('restricciones', ''), 
-                                         placeholder="Ej: Celíaco, odio el pepino...")
-        
-        # Cambiado de 'suplementos_disponibles' a 'suplementos'
-        p['suplementos'] = st.text_area("Suplementos que ya tienes", 
-                                       value=p.get('suplementos', ''), 
-                                       placeholder="Ej: Creatina, Proteína Whey...")
-        
-    # --- BLOQUE 5: EL INTERRUPTOR BIO-HACKER ---
+    # --- 4. SEGURIDAD Y SUPLEMENTOS ---
+    with st.expander("4. Suplementos y Alergias"):
+        p['restricciones'] = st.text_area("Alergias o alimentos que ODIAS", value=p['restricciones'])
+        p['suplementos'] = st.text_area("Suplementos que ya tienes", value=p['suplementos'])
+
+    # --- 5. MEMORIA GASTRONÓMICA ---
+    with st.expander("5. Memoria Gastronómica IA"):
+        p['gustos_positivos'] = st.text_area("Ingredientes que AMAS", value=p['gustos_positivos'])
+        p['gustos_negativos'] = st.text_area("Ingredientes que ODIAS", value=p['gustos_negativos'])
+
+    # --- 🚀 EL INTERRUPTOR MÁGICO ---
     st.divider()
-    p['bio_hacker_mode'] = st.toggle("🚀 ACTIVAR MODO BIO-HACKER & CLÍNICO", value=p['bio_hacker_mode'])
+    p['bio_hacker_mode'] = st.toggle("🚀 ACTIVAR MODO CLÍNICO Y BIO-HACKING", value=p['bio_hacker_mode'])
 
+    # --- AQUÍ VA EL NUEVO DASHBOARD MÉDICO QUE TE PASÉ ---
     if p['bio_hacker_mode']:
         with st.container(border=True):
-            st.warning("⚠️ Modo Bio-Hacker: Ajustando protocolos metabólicos y periodización celular.")
-            col_b1, col_b2 = st.columns(2)
-            with col_b1:
-                p['protocolo_metabolico'] = st.selectbox("Protocolo de Energía", 
-                    ["Balanceado", "Keto Cíclica", "Carb Cycling", "Paleo", "Carnívora (Lion Diet)", "Dieta Vertical"])
-            with col_b2:
-                p['salud_intestinal'] = st.multiselect("Salud Intestinal", ["Low FODMAP", "AIP (Autoinmune)", "Baja en Histamina"])
+            st.markdown("### 🧪 LABORATORIO DE BIO-HACKING")
+            
+            # Resumen de lo que la IA leyó en la pestaña Clínica
+            with st.status("🧬 Diagnóstico de Biomarcadores Activo", expanded=False):
+                st.write(f"**Analíticas:** {st.session_state.historial_medico.get('analiticas', 'Pendiente')}")
+                st.write(f"**Lesiones:** {st.session_state.historial_medico.get('lesiones', 'Sin lesiones')}")
 
             st.write("---")
-            if p['sexo'] == "Mujer":
-                st.subheader("🩸 Bio-Reloj Hormonal")
-                semana = st.slider("Semana del Ciclo", 1, 4, p['semana_mesociclo'])
-                p['semana_mesociclo'] = semana
-                fases = {
-                    1: ("Fase Menstrual", "🩸 Descarga del SNC. Hierro alto. RIR 3-4."),
-                    2: ("Fase Folicular", "🟢 Pico de fuerza. Carga de CH permitida. RIR 0-1."),
-                    3: ("Fase Ovulatoria", "🟡 Testosterona alta. Cuidado ligamentos. RIR 1."),
-                    4: ("Fase Lútea", "🟠 Metabolismo +10% kcal. Grasas altas. RIR 2-3.")
-                }
-                p['perfil_hormonal'], desc = fases[semana]
-                st.info(f"**{p['perfil_hormonal']}:** {desc}")
-            else:
-                st.subheader("📅 Periodización del Mesociclo")
-                semana = st.slider("Semana de carga", 1, 4, p['semana_mesociclo'])
-                p['semana_mesociclo'] = semana
-                p['perfil_hormonal'] = "Ninguno"
-                desc_h = {1:"Adaptación (VME)", 2:"Sobrecarga Progresiva", 3:"Pico de Intensidad (MRV)", 4:"Descarga (Deload)"}
-                st.info(f"**Fase actual:** {desc_h[semana]}")
 
-    if st.button("💾 SINCRONIZAR ADN BIOLÓGICO", type="primary", use_container_width=True):
-        st.success("¡Perfil Human OS actualizado!")
+            # Cronobiología Real
+            c_cron1, c_cron2, c_cron3 = st.columns(3)
+            with c_cron1:
+                p['hora_despertar'] = st.time_input("☀️ Despertar", p.get('hora_despertar', datetime.time(7,0)))
+            with c_cron2:
+                p['hora_dormir'] = st.time_input("🌙 Dormir", p.get('hora_dormir', datetime.time(23,0)))
+            with c_cron3:
+                p['cafeina'] = st.selectbox("☕ Cafeína", ["Alta", "Normal", "Sensible"])
+
+            st.write("---")
+
+            # Protocolos Clínicos
+            col_p1, col_p2 = st.columns(2)
+            with col_p1:
+                p['protocolo_metabolico'] = st.selectbox("🔬 Protocolo Metabólico", 
+                    ["Balanceado", "Dieta Vertical", "AIP (Autoinmune)", "Low FODMAP", "Keto Cíclica", "Carb Cycling"])
+            with col_p2:
+                p['salud_intestinal'] = st.multiselect("🦠 Filtros Microbiota", 
+                    ["Sin Histamina", "Sin Solanáceas", "Sin Gluten", "Sin Lácteos"])
+
+            # Periodización Visual con Métricas
+            st.write("---")
+            st.subheader("📅 Estado del Mesociclo / Ciclo")
+            semana = st.slider("Semana actual (1 a 4)", 1, 4, p.get('semana_mesociclo', 1))
+            p['semana_mesociclo'] = semana
+
+            m1, m2, m3 = st.columns(3)
+            if p['sexo'] == "Mujer":
+                fases = {1: ("Menstrual", "🩸"), 2: ("Folicular", "🟢"), 3: ("Ovulatoria", "🟡"), 4: ("Lútea", "🟠")}
+                fase, icono = fases[semana]
+                m1.metric("Fase Hormonal", fase, icono)
+                m2.metric("Enfoque Dieta", "Antiinflamatoria" if semana == 1 else "Carga Glucógeno")
+                m3.metric("Intensidad Sugerida", "Baja" if semana == 1 else "Máxima")
+            else:
+                fases_h = {1: ("Adaptación", "🌱"), 2: ("Sobrecarga", "📈"), 3: ("Pico", "🔥"), 4: ("Descarga", "🔋")}
+                fase, icono = fases_h[semana]
+                m1.metric("Estado Ciclo", fase, icono)
+                m2.metric("Volumen", "Moderado" if semana == 1 else "Máximo")
+                m3.metric("Riesgo Lesión", "Bajo" if semana == 4 else "Moderado")
+
+    # Botón Final
+    if st.button("💾 SINCRONIZAR ADN HUMAN OS", type="primary", use_container_width=True):
+        st.success("¡ADN calibrado con éxito!")
         st.balloons()
 
 elif menu == "🏥 Clínica Bio-Hacking":
